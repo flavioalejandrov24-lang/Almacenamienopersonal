@@ -527,6 +527,27 @@
         <div class="loading-spinner"></div>
     </div>
 
+    <div id="authScreen" class="hidden">
+    <div style="max-width: 400px; margin: 100px auto; padding: 32px; background: white; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center;">
+        <h2 id="authTitle" style="margin-bottom: 24px; color: #1e293b;">Iniciar Sesión</h2>
+        
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            <input type="email" id="authEmail" placeholder="Tu correo electrónico" style="padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; outline: none;">
+            <input type="password" id="authPassword" placeholder="Contraseña" style="padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; outline: none;">
+            
+            <button class="btn btn-upload" id="mainAuthBtn" onclick="handleAuth()" style="justify-content: center; width: 100%;">
+                Entrar
+            </button>
+
+            <div style="margin-top: 16px; font-size: 14px; color: #64748b;">
+                <p id="toggleAuthText">¿No tienes cuenta? <a href="#" onclick="toggleAuthMode()" style="color: #2563eb; text-decoration: none; font-weight: 500;">Regístrate</a></p>
+                <p style="margin-top: 8px;"><a href="#" onclick="resetPassword()" style="color: #64748b; text-decoration: none; font-size: 12px;">Olvidé mi contraseña</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
     <div id="app" class="hidden">
         <nav class="header">
             <div class="logo" onclick="goToRoot()">
@@ -546,7 +567,7 @@
                     </svg>
                     <span class="hidden sm:inline">Papelera</span>
                 </button>
-                <div class="user-avatar" id="userAvatar"></div>
+                <div class="user-avatar" id="userAvatar" onclick="handleLogout()" style="cursor: pointer;" title="Cerrar sesión"></div>
             </div>
         </nav>
 
@@ -635,30 +656,104 @@
         let currentView = 'browser';
         let currentPreviewItem = null;
 
-        async function init() {
-            try {
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                
-                if (!session) {
-                    const { data, error } = await supabaseClient.auth.signInAnonymously();
-                    if (error) throw error;
-                    user = data.user;
-                } else {
-                    user = session.user;
-                }
 
-                document.getElementById('userAvatar').textContent = user.id.substring(0, 2).toUpperCase();
-                
-                setupRealtimeSubscription();
-                await loadItems();
-                
-                document.getElementById('loadingScreen').classList.add('hidden');
-                document.getElementById('app').classList.remove('hidden');
-            } catch (err) {
-                console.error("Error de autenticación:", err);
-                alert("Error al inicializar la aplicación");
-            }
+        let isSignUpMode = false; // Controla si estamos en login o registro
+
+function toggleAuthMode() {
+    isSignUpMode = !isSignUpMode;
+    const title = document.getElementById('authTitle');
+    const btn = document.getElementById('mainAuthBtn');
+    const toggleText = document.getElementById('toggleAuthText');
+
+    if (isSignUpMode) {
+        title.textContent = "Crear Cuenta";
+        btn.textContent = "Registrarse";
+        toggleText.innerHTML = '¿Ya tienes cuenta? <a href="#" onclick="toggleAuthMode()" style="color: #2563eb; text-decoration: none; font-weight: 500;">Inicia Sesión</a>';
+    } else {
+        title.textContent = "Iniciar Sesión";
+        btn.textContent = "Entrar";
+        toggleText.innerHTML = '¿No tienes cuenta? <a href="#" onclick="toggleAuthMode()" style="color: #2563eb; text-decoration: none; font-weight: 500;">Regístrate</a>';
+    }
+}
+
+
+async function handleAuth() {
+    const email = document.getElementById('authEmail').value;
+    const password = document.getElementById('authPassword').value;
+
+    if (!email || !password) {
+        alert("Por favor, rellena todos los campos");
+        return;
+    }
+
+    try {
+        let result;
+        if (isSignUpMode) {
+            // Registro de nuevo usuario
+            result = await supabaseClient.auth.signUp({ email, password });
+            if (result.error) throw result.error;
+            alert("¡Registro exitoso! Ya puedes iniciar sesión.");
+            toggleAuthMode(); // Cambiamos a modo login automáticamente
+        } else {
+            // Inicio de sesión
+            result = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (result.error) throw result.error;
+            init(); // Recargamos la app para entrar
         }
+    } catch (error) {
+        alert("Error: " + error.message);
+    }
+}
+
+
+async function resetPassword() {
+    const email = document.getElementById('authEmail').value;
+    if (!email) {
+        alert("Por favor, introduce tu correo electrónico primero.");
+        return;
+    }
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
+    if (error) alert("Error: " + error.message);
+    else alert("Se ha enviado un correo para restablecer tu contraseña.");
+}
+
+async function handleLogout() {
+    const { error } = await supabaseClient.auth.signOut();
+    if (error) {
+        alert("Error al cerrar sesión: " + error.message);
+    } else {
+        // Al cerrar sesión, reiniciamos la página para limpiar el estado
+        window.location.reload();
+    }
+}
+        
+        
+       async function init() {
+    try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        
+        if (!session) {
+            // Si no hay sesión, mostramos login y ocultamos carga
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('authScreen').classList.remove('hidden');
+            document.getElementById('app').classList.add('hidden');
+            return;
+        }
+
+        // Si hay sesión, configuramos el usuario y cargamos la app
+        user = session.user;
+        document.getElementById('userAvatar').textContent = user.email.substring(0, 2).toUpperCase();
+        
+        setupRealtimeSubscription();
+        await loadItems();
+        
+        document.getElementById('loadingScreen').classList.add('hidden');
+        document.getElementById('authScreen').classList.add('hidden');
+        document.getElementById('app').classList.remove('hidden');
+    } catch (err) {
+        console.error("Error de inicialización:", err);
+    }
+}
 
         function setupRealtimeSubscription() {
             supabaseClient
@@ -1108,6 +1203,7 @@
     </script>
 </body>
 </html>
+
 
 
 
