@@ -721,9 +721,13 @@ async function resetPassword() {
         alert("Por favor, introduce tu correo electrónico primero.");
         return;
     }
-    const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        // 🔥 Aseguramos que el enlace del correo lo devuelva a tu app
+        redirectTo: 'https://flavioalejandrov24-lang.github.io/Almacenamienopersonal/',
+    });
+    
     if (error) alert("Error: " + error.message);
-    else alert("Se ha enviado un correo para restablecer tu contraseña.");
+    else alert("Se ha enviado un correo para restablecer tu contraseña. Revisa tu bandeja de entrada.");
 }
 
 async function handleLogout() {
@@ -739,30 +743,44 @@ async function handleLogout() {
         
       async function init() {
     try {
-        // 🔥 NUEVO: Detectar si viene desde confirmación de email
+        // 1. Detectar tokens de Supabase en la URL (#access_token=...)
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const accessToken = hashParams.get('access_token');
-        const type = hashParams.get('type');
+        const type = hashParams.get('type'); // Puede ser 'signup' o 'recovery'
 
-        // Si hay un token de confirmación de email
-        if (accessToken && type === 'signup') {
-            // Supabase ya maneja la sesión automáticamente con el token en la URL
-            console.log('Confirmación de email detectada');
-            // Limpiamos la URL para que no quede el token visible
+        if (accessToken) {
+            // Limpiamos la URL inmediatamente para evitar errores 404 al recargar
             window.history.replaceState({}, document.title, window.location.pathname);
+
+            if (type === 'recovery') {
+                // CASO: RECUPERACIÓN DE CONTRASEÑA
+                const newPassword = prompt("Introduce tu nueva contraseña:");
+                if (newPassword) {
+                    const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+                    if (error) alert("Error al actualizar: " + error.message);
+                    else alert("¡Contraseña actualizada! Ya puedes iniciar sesión con tu nueva clave.");
+                }
+                window.location.reload(); // Recargamos para limpiar estado de auth
+                return;
+            }
+            
+            if (type === 'signup') {
+                // CASO: CONFIRMACIÓN DE REGISTRO
+                console.log('Confirmación de email detectada');
+            }
         }
 
+        // 2. Verificar si existe una sesión activa
         const { data: { session } } = await supabaseClient.auth.getSession();
         
         if (!session) {
-            // Si no hay sesión, mostramos login y ocultamos carga
             document.getElementById('loadingScreen').classList.add('hidden');
             document.getElementById('authScreen').classList.remove('hidden');
             document.getElementById('app').classList.add('hidden');
             return;
         }
 
-        // Si hay sesión, configuramos el usuario y cargamos la app
+        // 3. Si hay sesión, configurar usuario y cargar galería
         user = session.user;
         document.getElementById('userAvatar').textContent = user.email.substring(0, 2).toUpperCase();
         
@@ -772,6 +790,18 @@ async function handleLogout() {
         document.getElementById('loadingScreen').classList.add('hidden');
         document.getElementById('authScreen').classList.add('hidden');
         document.getElementById('app').classList.remove('hidden');
+
+        // Mensaje de bienvenida tras confirmar registro
+        if (type === 'signup') {
+            setTimeout(() => alert('¡Bienvenido! Tu cuenta ha sido confirmada con éxito.'), 500);
+        }
+
+    } catch (err) {
+        console.error("Error de inicialización:", err);
+        document.getElementById('loadingScreen').classList.add('hidden');
+        document.getElementById('authScreen').classList.remove('hidden');
+    }
+}
         
         // 🔥 NUEVO: Mensaje de bienvenida si viene de confirmación
         if (accessToken && type === 'signup') {
@@ -1234,6 +1264,7 @@ async function handleLogout() {
     </script>
 </body>
 </html>
+
 
 
 
