@@ -729,35 +729,39 @@ async function init() {
         const accessToken = hashParams.get('access_token');
         const type = hashParams.get('type'); 
 
-        if (accessToken) {
-            // Caso especial: Recuperación de contraseña
-            if (type === 'recovery') {
-                // Primero limpiamos la URL para estabilidad
-                window.history.replaceState({}, document.title, window.location.pathname);
+        // 2. CASO ESPECIAL: Recuperación de contraseña
+        if (accessToken && type === 'recovery') {
+            // Esperamos a que Supabase establezca la sesión
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const newPassword = prompt("Introduce tu nueva contraseña (mínimo 6 caracteres):");
+            
+            if (newPassword && newPassword.length >= 6) {
+                const { error } = await supabaseClient.auth.updateUser({ 
+                    password: newPassword 
+                });
                 
-                // Pequeña pausa para que Supabase reconozca la sesión del token
-                setTimeout(async () => {
-                    const newPassword = prompt("Introduce tu nueva contraseña (mínimo 6 caracteres):");
-                    if (newPassword) {
-                        const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
-                        if (error) {
-                            alert("Error al actualizar: " + error.message);
-                        } else {
-                            alert("¡Contraseña actualizada con éxito! Ahora inicia sesión.");
-                        }
-                    }
-                    window.location.reload();
-                }, 500);
-                return; // Detenemos el resto del init mientras se recupera
+                if (error) {
+                    alert("❌ Error al actualizar: " + error.message);
+                } else {
+                    alert("✅ ¡Contraseña actualizada con éxito!\n\nAhora puedes iniciar sesión con tu nueva contraseña.");
+                    // Limpiamos la URL y cerramos sesión
+                    await supabaseClient.auth.signOut();
+                }
             }
             
-            // Si es confirmación de registro, limpiamos y seguimos
-            if (type === 'signup') {
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
+            // Limpiamos la URL y recargamos
+            window.history.replaceState({}, document.title, window.location.pathname);
+            window.location.reload();
+            return;
+        }
+        
+        // 3. Si es confirmación de registro, limpiamos URL
+        if (accessToken && type === 'signup') {
+            window.history.replaceState({}, document.title, window.location.pathname);
         }
 
-        // 2. Verificar sesión normal
+        // 4. Verificar sesión normal
         const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
         
         if (sessionError || !session) {
@@ -767,7 +771,7 @@ async function init() {
             return;
         }
 
-        // 3. Cargar aplicación si hay sesión
+        // 5. Cargar aplicación si hay sesión
         user = session.user;
         document.getElementById('userAvatar').textContent = user.email.substring(0, 2).toUpperCase();
         
@@ -779,7 +783,7 @@ async function init() {
         document.getElementById('app').classList.remove('hidden');
 
         if (type === 'signup') {
-            setTimeout(() => alert('¡Bienvenido! Cuenta confirmada.'), 500);
+            setTimeout(() => alert('✅ ¡Bienvenido! Tu cuenta ha sido confirmada.'), 500);
         }
 
     } catch (err) {
@@ -1237,6 +1241,7 @@ async function init() {
     </script>
 </body>
 </html>
+
 
 
 
