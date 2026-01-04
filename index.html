@@ -714,7 +714,7 @@ async function resetPassword() {
     if (error) alert("Error: " + error.message);
     else alert("Se ha enviado un correo para restablecer tu contraseña.");
 }
-
+        
 async function handleLogout() {
     const { error } = await supabaseClient.auth.signOut();
     if (error) alert("Error al cerrar sesión: " + error.message);
@@ -1237,6 +1237,7 @@ async function init() {
     </script>
 </body>
 </html>
+
 
 
 
