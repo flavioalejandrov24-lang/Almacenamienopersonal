@@ -529,6 +529,60 @@
             display: none !important;
         }
 
+        .selection-mode .item-card {
+    position: relative;
+}
+
+.item-checkbox {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 24px;
+    height: 24px;
+    z-index: 10;
+    cursor: pointer;
+    accent-color: #2563eb;
+}
+
+.selection-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid #e2e8f0;
+    padding: 16px 24px;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 -4px 6px rgba(0,0,0,0.1);
+    z-index: 150;
+}
+
+.selection-bar.visible {
+    display: flex;
+}
+
+.selection-info {
+    font-weight: 500;
+    color: #475569;
+}
+
+.selection-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-select {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.btn-select.active {
+    background: #2563eb;
+    color: white;
+}
+
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -628,6 +682,15 @@
                     <div class="breadcrumbs" id="breadcrumbs"></div>
                     
                     <div class="actions-bar" id="actionsBar">
+
+                     <button class="btn btn-select" id="selectModeBtn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 11 12 14 22 4"/>
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                            </svg>
+                            Seleccionar
+                        </button>
+                        
                         <button class="btn btn-primary" id="createFolderBtn">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <line x1="12" y1="5" x2="12" y2="19"/>
@@ -675,12 +738,38 @@
             </div>
         </div>
 
-<div class="upload-overlay" id="uploadOverlay">
-    <div class="spinner"></div>
-    <p style="font-weight: 500; margin-bottom: 8px;">Subiendo archivos...</p>
-    <p id="uploadStatus" style="font-size: 14px; color: rgba(255,255,255,0.8); margin-bottom: 8px;">0 de 0</p>
-    <div class="progress-bar"></div>
+<div class="selection-bar" id="selectionBar">
+            <span class="selection-info" id="selectionInfo">0 elementos seleccionados</span>
+            <div class="selection-actions">
+                <button class="btn btn-secondary" id="downloadSelectedBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                    </svg>
+                    Descargar
+                </button>
+                <button class="btn btn-secondary" id="moveSelectedBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                        <polyline points="13 2 13 9 20 9"/>
+                    </svg>
+                    Mover
+                </button>
+                <button class="btn btn-secondary" id="deleteSelectedBtn" style="background: #dc2626;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                    Eliminar
+                </button>
+                <button class="btn btn-primary" id="cancelSelectionBtn">Cancelar</button>
+            </div>
+        </div>
         
+ <div class="upload-overlay" id="uploadOverlay">
+            <div class="spinner"></div>
+            <p style="font-weight: 500; margin-bottom: 8px;">Subiendo archivos...</p>
+            <p id="uploadStatus" style="font-size: 14px; color: rgba(255,255,255,0.8); margin-bottom: 8px;">0 de 0</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
             </div>
         </div>
     </div>
@@ -708,6 +797,8 @@
         let currentView = 'browser';
         let currentPreviewItem = null;
         let isSignUpMode = false;
+        let isSelectionMode = false;
+        let selectedItems = new Set();
 
         // --- SISTEMA DE MODALES ---
         function showModal({ title, message, showInput = false, onConfirm, showCancel = false }) {
@@ -994,41 +1085,51 @@
             
             contentArea.innerHTML = `<div class="grid">${displayedItems.map(renderItem).join('')}</div>`;
             
-            // Bind click events
-            contentArea.querySelectorAll('[data-item-action="click"]').forEach(el => {
-                el.addEventListener('click', () => {
-                    const item = JSON.parse(el.dataset.item);
-                    handleItemClick(item);
-                });
-            });
-            
-            contentArea.querySelectorAll('[data-item-action="menu"]').forEach(el => {
-                el.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const item = JSON.parse(el.dataset.item);
-                    showContextMenu(e, item);
-                });
-            });
-        }
+          // Bind click events
+contentArea.querySelectorAll('[data-item-action="click"]').forEach(el => {
+    el.addEventListener('click', () => {
+        const item = JSON.parse(el.dataset.item);
+        handleItemClick(item);
+    });
+});
 
-        function renderItem(item) {
-            const itemJson = JSON.stringify(item).replace(/"/g, '&quot;');
-            const preview = item.type === 'folder' 
-                ? `<svg class="folder-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>` 
-                : `<img src="${item.imageUrl}" alt="${item.name}" loading="lazy">`;
-            
-            return `
-                <div class="item-card">
-                    <div class="item-preview" data-item-action="click" data-item="${itemJson}">
-                        ${preview}
-                    </div>
-                    <div class="item-info">
-                        <div class="item-header">
-                            <p class="item-name">${item.name}</p>
-                            <button class="item-menu-btn" data-item-action="menu" data-item="${itemJson}">⋮</button>
-                        </div>
-                    </div>
-                </div>`;
+contentArea.querySelectorAll('[data-item-action="select"]').forEach(el => {
+    el.addEventListener('click', (e) => {
+        if (e.target.classList.contains('item-checkbox')) return;
+        const item = JSON.parse(el.dataset.item);
+        toggleItemSelection(item.id);
+    });
+});
+
+contentArea.querySelectorAll('.item-checkbox').forEach(cb => {
+    cb.addEventListener('change', (e) => {
+        e.stopPropagation();
+        toggleItemSelection(cb.dataset.itemId);
+    });
+});
+
+       function renderItem(item) {
+    const itemJson = JSON.stringify(item).replace(/"/g, '&quot;');
+    const preview = item.type === 'folder' 
+        ? `<svg class="folder-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>` 
+        : `<img src="${item.imageUrl}" alt="${item.name}" loading="lazy">`;
+    
+    const checkbox = isSelectionMode ? 
+        `<input type="checkbox" class="item-checkbox" data-item-id="${item.id}" ${selectedItems.has(item.id) ? 'checked' : ''}>` : '';
+    
+    return `
+        <div class="item-card">
+            ${checkbox}
+            <div class="item-preview" data-item-action="${isSelectionMode ? 'select' : 'click'}" data-item="${itemJson}">
+                ${preview}
+            </div>
+            <div class="item-info">
+                <div class="item-header">
+                    <p class="item-name">${item.name}</p>
+                    <button class="item-menu-btn" data-item-action="menu" data-item="${itemJson}" style="${isSelectionMode ? 'display:none' : ''}">⋮</button>
+                </div>
+            </div>
+        </div>`;
         }
 
         function handleItemClick(item) {
@@ -1304,6 +1405,146 @@
             await moveToTrash(currentPreviewItem);
         }
 
+        function toggleSelectionMode() {
+    isSelectionMode = !isSelectionMode;
+    const btn = document.getElementById('selectModeBtn');
+    
+    if (isSelectionMode) {
+        btn.classList.add('active');
+        btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Cancelar`;
+    } else {
+        btn.classList.remove('active');
+        btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Seleccionar`;
+        selectedItems.clear();
+        document.getElementById('selectionBar').classList.remove('visible');
+    }
+    
+    renderContent();
+}
+
+function toggleItemSelection(itemId) {
+    if (selectedItems.has(itemId)) {
+        selectedItems.delete(itemId);
+    } else {
+        selectedItems.add(itemId);
+    }
+    updateSelectionUI();
+}
+
+function updateSelectionUI() {
+    const count = selectedItems.size;
+    document.getElementById('selectionInfo').textContent = `${count} elemento${count !== 1 ? 's' : ''} seleccionado${count !== 1 ? 's' : ''}`;
+    
+    if (count > 0) {
+        document.getElementById('selectionBar').classList.add('visible');
+    } else {
+        document.getElementById('selectionBar').classList.remove('visible');
+    }
+    
+    renderGrid();
+}
+
+async function deleteSelectedItems() {
+    if (selectedItems.size === 0) return;
+    
+    showModal({
+        title: "⚠️ Confirmar",
+        message: `¿Mover ${selectedItems.size} elemento(s) a la papelera?`,
+        showCancel: true,
+        onConfirm: async () => {
+            try {
+                const itemsArray = Array.from(selectedItems);
+                for (const itemId of itemsArray) {
+                    await supabaseClient
+                        .from('gallery_items')
+                        .update({ is_deleted: true })
+                        .eq('id', itemId);
+                }
+                
+                showModal({ title: "✅ Éxito", message: `${itemsArray.length} elemento(s) movido(s) a la papelera.` });
+                selectedItems.clear();
+                toggleSelectionMode();
+            } catch (error) {
+                showModal({ title: "Error", message: error.message });
+            }
+        }
+    });
+}
+
+async function downloadSelectedItems() {
+    if (selectedItems.size === 0) return;
+    
+    const selectedImages = items.filter(item => selectedItems.has(item.id) && item.type === 'image');
+    
+    if (selectedImages.length === 0) {
+        showModal({ title: "Aviso", message: "Solo se pueden descargar imágenes." });
+        return;
+    }
+    
+    for (const item of selectedImages) {
+        try {
+            const response = await fetch(item.imageUrl);
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = item.name;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (error) {
+            console.error(`Error descargando ${item.name}:`, error);
+        }
+    }
+    
+    showModal({ title: "✅ Éxito", message: `${selectedImages.length} imagen(es) descargada(s).` });
+}
+
+async function moveSelectedItems() {
+    if (selectedItems.size === 0) return;
+    
+    const folders = items.filter(item => item.type === 'folder' && !item.is_deleted && item.parent_id === currentFolderId);
+    
+    if (folders.length === 0) {
+        showModal({ title: "Aviso", message: "No hay carpetas disponibles. Crea una carpeta primero." });
+        return;
+    }
+    
+    const folderList = folders.map(f => `- ${f.name} (ID: ${f.id})`).join('\n');
+    
+    showModal({
+        title: "Mover elementos",
+        message: `Carpetas disponibles:\n${folderList}\n\nEscribe el ID de la carpeta destino:`,
+        showInput: true,
+        showCancel: true,
+        onConfirm: async (targetId) => {
+            const targetFolder = folders.find(f => f.id === targetId);
+            if (!targetFolder) {
+                showModal({ title: "Error", message: "Carpeta no válida." });
+                return;
+            }
+            
+            try {
+                const itemsArray = Array.from(selectedItems);
+                for (const itemId of itemsArray) {
+                    await supabaseClient
+                        .from('gallery_items')
+                        .update({ parent_id: targetId })
+                        .eq('id', itemId);
+                }
+                
+                showModal({ title: "✅ Éxito", message: `${itemsArray.length} elemento(s) movido(s) a "${targetFolder.name}".` });
+                selectedItems.clear();
+                toggleSelectionMode();
+            } catch (error) {
+                showModal({ title: "Error", message: error.message });
+            }
+        }
+    });
+}
+        
         // --- EVENT LISTENERS ---
         document.addEventListener('DOMContentLoaded', () => {
             // Auth screen
@@ -1325,6 +1566,12 @@
             // Actions
             document.getElementById('createFolderBtn').addEventListener('click', createFolder);
             document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+
+            document.getElementById('selectModeBtn').addEventListener('click', toggleSelectionMode);
+            document.getElementById('cancelSelectionBtn').addEventListener('click', toggleSelectionMode);
+            document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelectedItems);
+            document.getElementById('downloadSelectedBtn').addEventListener('click', downloadSelectedItems);
+            document.getElementById('moveSelectedBtn').addEventListener('click', moveSelectedItems);
             
             // Preview modal
             document.getElementById('closePreviewBtn').addEventListener('click', closePreview);
@@ -1342,4 +1589,5 @@
     </script>
 </body>
 </html>
+
 
