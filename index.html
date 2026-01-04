@@ -14,28 +14,26 @@
         }
 
         body {        
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    /* Fondo profesional con gradiente sutil */
-    background: radial-gradient(circle at top right, #f1f5f9, #e2e8f0);
-    background-attachment: fixed;
-    color: #1e293b;
-    min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: radial-gradient(circle at top right, #f1f5f9, #e2e8f0);
+            background-attachment: fixed;
+            color: #1e293b;
+            min-height: 100vh;
         }
 
         .header {
             position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 64px;
-    /* Color azul extraído de tu logo */
-    background: #2563eb; 
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 24px;
-    z-index: 100;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: #2563eb; 
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 100;
         }
 
         .logo {
@@ -46,19 +44,19 @@
         }
 
         .logo-icon {
-            background: rgba(255, 255, 255, 0.2); /* Fondo semitransparente para el icono */
-    padding: 8px;
-    border-radius: 8px;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px;
+            border-radius: 8px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .logo-text {
             font-size: 20px;
             font-weight: bold;
-            color: white; /* Texto en blanco sólido */
+            color: white;
         }
 
         .header-actions {
@@ -81,13 +79,13 @@
         }
 
         .btn-trash {
-           background: transparent;
-    color: rgba(255, 255, 255, 0.9); /* Blanco suave para el botón de papelera */
+            background: transparent;
+            color: rgba(255, 255, 255, 0.9);
         }
 
         .btn-trash:hover {
             background: rgba(255, 255, 255, 0.1);
-    color: white;
+            color: white;
         }
 
         .btn-trash.active {
@@ -163,6 +161,16 @@
 
         .btn-primary:hover {
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .btn-secondary {
+            background: #64748b;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
         }
 
         .btn-upload {
@@ -521,66 +529,79 @@
             display: none !important;
         }
 
-.modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5); display: flex; align-items: center;
-    justify-content: center; z-index: 2000;
-}
-.modal-content {
-    background: white; padding: 24px; border-radius: 12px;
-    width: 90%; max-width: 400px; text-align: center;
-}
-.modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
-.hidden { display: none !important; }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .modal-overlay .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
     </style>
 </head>
-
-
-<div id="customModal" class="modal-overlay hidden">
-    <div class="modal-content">
-        <h3 id="modalTitle">Título</h3>
-        <p id="modalMessage">Mensaje aquí...</p>
-        <div id="modalInputContainer" class="hidden">
-            <input type="password" id="modalInput" placeholder="Nueva contraseña" 
-                   style="width: 100%; padding: 10px; margin-top: 10px; border: 1px solid #ddd; border-radius: 4px;">
-        </div>
-        <div class="modal-buttons">
-            <button id="modalCancelBtn" class="btn-secondary hidden">Cancelar</button>
-            <button id="modalConfirmBtn" class="btn-primary">Aceptar</button>
-        </div>
-    </div>
-</div>
-
-    
 <body>
     <div id="loadingScreen" class="loading-screen">
         <div class="loading-spinner"></div>
     </div>
 
-    <div id="authScreen" class="hidden">
-    <div style="max-width: 400px; margin: 100px auto; padding: 32px; background: white; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center;">
-        <h2 id="authTitle" style="margin-bottom: 24px; color: #1e293b;">Iniciar Sesión</h2>
-        
-        <div style="display: flex; flex-direction: column; gap: 16px;">
-            <input type="email" id="authEmail" placeholder="Tu correo electrónico" style="padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; outline: none;">
-            <input type="password" id="authPassword" placeholder="Contraseña" style="padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; outline: none;">
-            
-            <button class="btn btn-upload" id="mainAuthBtn" onclick="handleAuth()" style="justify-content: center; width: 100%;">
-                Entrar
-            </button>
-
-            <div style="margin-top: 16px; font-size: 14px; color: #64748b;">
-                <p id="toggleAuthText">¿No tienes cuenta? <a href="#" onclick="toggleAuthMode()" style="color: #2563eb; text-decoration: none; font-weight: 500;">Regístrate</a></p>
-                <p style="margin-top: 8px;"><a href="#" onclick="resetPassword()" style="color: #64748b; text-decoration: none; font-size: 12px;">Olvidé mi contraseña</a></p>
+    <div id="customModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 id="modalTitle">Título</h3>
+            <p id="modalMessage">Mensaje aquí...</p>
+            <div id="modalInputContainer" class="hidden">
+                <input type="password" id="modalInput" placeholder="Nueva contraseña" 
+                       style="width: 100%; padding: 10px; margin-top: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div class="modal-buttons">
+                <button id="modalCancelBtn" class="btn-secondary hidden">Cancelar</button>
+                <button id="modalConfirmBtn" class="btn btn-upload">Aceptar</button>
             </div>
         </div>
     </div>
-</div>
 
+    <div id="authScreen" class="hidden">
+        <div style="max-width: 400px; margin: 100px auto; padding: 32px; background: white; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center;">
+            <h2 id="authTitle" style="margin-bottom: 24px; color: #1e293b;">Iniciar Sesión</h2>
+            
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <input type="email" id="authEmail" placeholder="Tu correo electrónico" style="padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; outline: none;">
+                <input type="password" id="authPassword" placeholder="Contraseña" style="padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; outline: none;">
+                
+                <button class="btn btn-upload" id="mainAuthBtn" style="justify-content: center; width: 100%;">
+                    Entrar
+                </button>
+
+                <div style="margin-top: 16px; font-size: 14px; color: #64748b;">
+                    <p id="toggleAuthText">¿No tienes cuenta? <a href="#" id="toggleAuthLink" style="color: #2563eb; text-decoration: none; font-weight: 500;">Regístrate</a></p>
+                    <p style="margin-top: 8px;"><a href="#" id="resetPasswordLink" style="color: #64748b; text-decoration: none; font-size: 12px;">Olvidé mi contraseña</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div id="app" class="hidden">
         <nav class="header">
-            <div class="logo" onclick="goToRoot()">
+            <div class="logo" id="logoBtn">
                 <div class="logo-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="2" y="6" width="20" height="12" rx="2"/>
@@ -591,13 +612,13 @@
             </div>
             
             <div class="header-actions">
-                <button class="btn btn-trash" id="trashBtn" onclick="toggleTrash()">
+                <button class="btn btn-trash" id="trashBtn">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                     </svg>
                     <span class="hidden sm:inline">Papelera</span>
                 </button>
-                <div class="user-avatar" id="userAvatar" onclick="handleLogout()" style="cursor: pointer;" title="Cerrar sesión"></div>
+                <div class="user-avatar" id="userAvatar" style="cursor: pointer;" title="Cerrar sesión"></div>
             </div>
         </nav>
 
@@ -607,7 +628,7 @@
                     <div class="breadcrumbs" id="breadcrumbs"></div>
                     
                     <div class="actions-bar" id="actionsBar">
-                        <button class="btn btn-primary" onclick="createFolder()">
+                        <button class="btn btn-primary" id="createFolderBtn">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <line x1="12" y1="5" x2="12" y2="19"/>
                                 <line x1="5" y1="12" x2="19" y2="12"/>
@@ -619,7 +640,7 @@
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
                             </svg>
                             Subir Foto
-                            <input type="file" id="fileInput" accept="image/*" onchange="handleFileUpload(event)" style="display: none;">
+                            <input type="file" id="fileInput" accept="image/*" style="display: none;">
                         </label>
                     </div>
                 </div>
@@ -631,19 +652,19 @@
         <div class="context-menu" id="contextMenu"></div>
 
         <div class="modal" id="previewModal">
-            <button class="modal-close" onclick="closePreview()">×</button>
+            <button class="modal-close" id="closePreviewBtn">×</button>
             <div class="modal-content">
                 <img id="previewImage" class="modal-image" alt="">
                 <div class="modal-info">
                     <h2 class="modal-title" id="previewTitle"></h2>
                     <div class="modal-actions">
-                        <button class="btn btn-modal" onclick="downloadCurrentImage()">
+                        <button class="btn btn-modal" id="downloadBtn">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
                             </svg>
                             Descargar
                         </button>
-                        <button class="btn btn-modal danger" onclick="deleteCurrentImage()">
+                        <button class="btn btn-modal danger" id="deleteImageBtn">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                             </svg>
@@ -653,6 +674,7 @@
                 </div>
             </div>
         </div>
+
         <div class="upload-overlay" id="uploadOverlay">
             <div class="spinner"></div>
             <p style="font-weight: 500; margin-bottom: 8px;">Subiendo archivo...</p>
@@ -662,318 +684,625 @@
         </div>
     </div>
 
-// 🔒 CONFIGURACIÓN SEGURA
-const SUPABASE_URL = window.SUPABASE_CONFIG?.url;
-const SUPABASE_ANON_KEY = window.SUPABASE_CONFIG?.key;
+    <script>
+        // 🔒 CONFIGURACIÓN SEGURA
+        const SUPABASE_URL = window.SUPABASE_CONFIG?.url;
+        const SUPABASE_ANON_KEY = window.SUPABASE_CONFIG?.key;
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    document.getElementById('loadingScreen').innerHTML = `
-        <div class="error-message">
-            <strong>Error de Configuración</strong><br>
-            No se encontraron las credenciales de Supabase.
-        </div>
-    `;
-    throw new Error('Faltan credenciales de Supabase');
-}
-
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-let user = null;
-let items = [];
-let currentFolderId = 'root';
-let currentView = 'browser';
-let currentPreviewItem = null;
-let isSignUpMode = false;
-
-// --- SISTEMA DE MODALES ---
-function showModal({ title, message, showInput = false, onConfirm, showCancel = false }) {
-    const modal = document.getElementById('customModal');
-    document.getElementById('modalTitle').textContent = title;
-    document.getElementById('modalMessage').textContent = message;
-    
-    const inputCont = document.getElementById('modalInputContainer');
-    const input = document.getElementById('modalInput');
-    input.value = ""; // Limpiar input
-    showInput ? inputCont.classList.remove('hidden') : inputCont.classList.add('hidden');
-    
-    const cancelBtn = document.getElementById('modalCancelBtn');
-    showCancel ? cancelBtn.classList.remove('hidden') : cancelBtn.classList.add('hidden');
-
-    modal.classList.remove('hidden');
-
-    document.getElementById('modalConfirmBtn').onclick = () => {
-        modal.classList.add('hidden');
-        if (onConfirm) onConfirm(input.value);
-    };
-    
-    cancelBtn.onclick = () => modal.classList.add('hidden');
-}
-
-// --- AUTENTICACIÓN ---
-function toggleAuthMode() {
-    isSignUpMode = !isSignUpMode;
-    const title = document.getElementById('authTitle');
-    const btn = document.getElementById('mainAuthBtn');
-    const toggleText = document.getElementById('toggleAuthText');
-
-    if (isSignUpMode) {
-        title.textContent = "Crear Cuenta";
-        btn.textContent = "Registrarse";
-        toggleText.innerHTML = '¿Ya tienes cuenta? <a href="#" onclick="toggleAuthMode()" style="color: #2563eb; text-decoration: none; font-weight: 500;">Inicia Sesión</a>';
-    } else {
-        title.textContent = "Iniciar Sesión";
-        btn.textContent = "Entrar";
-        toggleText.innerHTML = '¿No tienes cuenta? <a href="#" onclick="toggleAuthMode()" style="color: #2563eb; text-decoration: none; font-weight: 500;">Regístrate</a>';
-    }
-}
-
-async function handleAuth() {
-    const email = document.getElementById('authEmail').value;
-    const password = document.getElementById('authPassword').value;
-
-    if (!email || !password) {
-        showModal({ title: "Atención", message: "Por favor, rellena todos los campos." });
-        return;
-    }
-
-    try {
-        if (isSignUpMode) {
-            const { error } = await supabaseClient.auth.signUp({ 
-                email, 
-                password,
-                options: { emailRedirectTo: 'https://flavioalejandrov24-lang.github.io/Almacenamienopersonal/' }
-            });
-            if (error) throw error;
-            showModal({ 
-                title: "¡Casi listo!", 
-                message: "Revisa tu correo para confirmar tu cuenta.",
-                onConfirm: () => toggleAuthMode()
-            });
-        } else {
-            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-            if (error) throw error;
-            init();
+        if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+            document.getElementById('loadingScreen').innerHTML = `
+                <div class="error-message">
+                    <strong>Error de Configuración</strong><br>
+                    No se encontraron las credenciales de Supabase.
+                </div>
+            `;
+            throw new Error('Faltan credenciales de Supabase');
         }
-    } catch (error) {
-        showModal({ title: "Error", message: error.message });
-    }
-}
 
-async function resetPassword() {
-    const email = document.getElementById('authEmail').value;
-    if (!email) return showModal({ title: "Aviso", message: "Escribe tu correo primero." });
-    
-    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-        redirectTo: 'https://flavioalejandrov24-lang.github.io/Almacenamienopersonal/',
-    });
-    
-    if (error) showModal({ title: "Error", message: error.message });
-    else showModal({ title: "Enviado", message: "Revisa tu correo para restablecer la contraseña." });
-}
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-async function handleLogout() {
-    await supabaseClient.auth.signOut();
-    window.location.reload();
-}
+        let user = null;
+        let items = [];
+        let currentFolderId = 'root';
+        let currentView = 'browser';
+        let currentPreviewItem = null;
+        let isSignUpMode = false;
 
-// --- INICIALIZACIÓN ---
-async function init() {
-    try {
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = hashParams.get('access_token');
-        const type = hashParams.get('type'); 
+        // --- SISTEMA DE MODALES ---
+        function showModal({ title, message, showInput = false, onConfirm, showCancel = false }) {
+            const modal = document.getElementById('customModal');
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').textContent = message;
+            
+            const inputCont = document.getElementById('modalInputContainer');
+            const input = document.getElementById('modalInput');
+            input.value = "";
+            showInput ? inputCont.classList.remove('hidden') : inputCont.classList.add('hidden');
+            
+            const cancelBtn = document.getElementById('modalCancelBtn');
+            showCancel ? cancelBtn.classList.remove('hidden') : cancelBtn.classList.add('hidden');
 
-        if (accessToken) {
-            await supabaseClient.auth.setSession({
-                access_token: accessToken,
-                refresh_token: hashParams.get('refresh_token')
+            modal.classList.remove('hidden');
+
+            document.getElementById('modalConfirmBtn').onclick = () => {
+                modal.classList.add('hidden');
+                if (onConfirm) onConfirm(input.value);
+            };
+            
+            cancelBtn.onclick = () => modal.classList.add('hidden');
+        }
+
+        // --- AUTENTICACIÓN ---
+        function toggleAuthMode() {
+            isSignUpMode = !isSignUpMode;
+            const title = document.getElementById('authTitle');
+            const btn = document.getElementById('mainAuthBtn');
+            const toggleText = document.getElementById('toggleAuthText');
+
+            if (isSignUpMode) {
+                title.textContent = "Crear Cuenta";
+                btn.textContent = "Registrarse";
+                toggleText.innerHTML = '¿Ya tienes cuenta? <a href="#" id="toggleAuthLink" style="color: #2563eb; text-decoration: none; font-weight: 500;">Inicia Sesión</a>';
+            } else {
+                title.textContent = "Iniciar Sesión";
+                btn.textContent = "Entrar";
+                toggleText.innerHTML = '¿No tienes cuenta? <a href="#" id="toggleAuthLink" style="color: #2563eb; text-decoration: none; font-weight: 500;">Regístrate</a>';
+            }
+            
+            // Re-bind event
+            document.getElementById('toggleAuthLink').addEventListener('click', (e) => {
+                e.preventDefault();
+                toggleAuthMode();
             });
+        }
 
-            if (type === 'recovery') {
-                window.history.replaceState({}, document.title, window.location.pathname);
-                setTimeout(() => {
-                    showModal({
-                        title: "Nueva Contraseña",
-                        message: "Ingresa tu nueva clave (mínimo 6 caracteres):",
-                        showInput: true,
-                        showCancel: true,
-                        onConfirm: async (newPass) => {
-                            if (!newPass || newPass.length < 6) return showModal({ title: "Error", message: "Demasiado corta." });
-                            const { error } = await supabaseClient.auth.updateUser({ password: newPass });
-                            if (error) showModal({ title: "Error", message: error.message });
-                            else showModal({ title: "Éxito", message: "Contraseña cambiada.", onConfirm: () => window.location.reload() });
-                        }
-                    });
-                }, 800);
+        async function handleAuth() {
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+
+            if (!email || !password) {
+                showModal({ title: "Atención", message: "Por favor, rellena todos los campos." });
                 return;
             }
-            window.history.replaceState({}, document.title, window.location.pathname);
+
+            try {
+                if (isSignUpMode) {
+                    const { error } = await supabaseClient.auth.signUp({ 
+                        email, 
+                        password,
+                        options: { emailRedirectTo: window.location.origin + window.location.pathname }
+                    });
+                    if (error) throw error;
+                    showModal({ 
+                        title: "¡Casi listo!", 
+                        message: "Revisa tu correo para confirmar tu cuenta.",
+                        onConfirm: () => toggleAuthMode()
+                    });
+                } else {
+                    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                    if (error) throw error;
+                    init();
+                }
+            } catch (error) {
+                showModal({ title: "Error", message: error.message });
+            }
         }
 
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (!session) {
-            document.getElementById('loadingScreen').classList.add('hidden');
-            document.getElementById('authScreen').classList.remove('hidden');
-            document.getElementById('app').classList.add('hidden');
-            return;
+        async function resetPassword() {
+            const email = document.getElementById('authEmail').value;
+            if (!email) {
+                showModal({ title: "Aviso", message: "Escribe tu correo primero en el campo de email." });
+                return;
+            }
+            
+            try {
+                const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.origin + window.location.pathname,
+                });
+                
+                if (error) throw error;
+                showModal({ title: "✅ Enviado", message: "Revisa tu correo para restablecer la contraseña. El link expira en 1 hora." });
+            } catch (error) {
+                showModal({ title: "Error", message: error.message });
+            }
         }
 
-        user = session.user;
-        document.getElementById('userAvatar').textContent = user.email.substring(0, 2).toUpperCase();
-        
-        setupRealtimeSubscription();
-        await loadItems();
-        
-        document.getElementById('loadingScreen').classList.add('hidden');
-        document.getElementById('authScreen').classList.add('hidden');
-        document.getElementById('app').classList.remove('hidden');
-
-        if (type === 'signup') {
-            showModal({ title: "¡Bienvenido!", message: "Cuenta activada con éxito." });
+        async function handleLogout() {
+            await supabaseClient.auth.signOut();
+            window.location.reload();
         }
 
-    } catch (err) {
-        console.error("Error:", err);
-    }
-}
+        // --- INICIALIZACIÓN ---
+        async function init() {
+            try {
+                const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                const accessToken = hashParams.get('access_token');
+                const type = hashParams.get('type'); 
 
-// --- FUNCIONALIDADES DE LA APP ---
-function setupRealtimeSubscription() {
-    supabaseClient.channel('gallery_changes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'gallery_items', filter: `user_id=eq.${user.id}` }, 
-        () => loadItems()).subscribe();
-}
+                if (accessToken) {
+                    await supabaseClient.auth.setSession({
+                        access_token: accessToken,
+                        refresh_token: hashParams.get('refresh_token')
+                    });
 
-async function loadItems() {
-    if (!user) return;
-    const { data, error } = await supabaseClient.from('gallery_items').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
-    if (error) return;
+                    if (type === 'recovery') {
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        setTimeout(() => {
+                            showModal({
+                                title: "🔑 Nueva Contraseña",
+                                message: "Ingresa tu nueva clave (mínimo 6 caracteres):",
+                                showInput: true,
+                                showCancel: true,
+                                onConfirm: async (newPass) => {
+                                    if (!newPass || newPass.length < 6) {
+                                        showModal({ title: "Error", message: "La contraseña debe tener al menos 6 caracteres." });
+                                        return;
+                                    }
+                                    try {
+                                        const { error } = await supabaseClient.auth.updateUser({ password: newPass });
+                                        if (error) throw error;
+                                        showModal({ 
+                                            title: "✅ Éxito", 
+                                            message: "Contraseña actualizada correctamente.", 
+                                            onConfirm: () => window.location.reload() 
+                                        });
+                                    } catch (error) {
+                                        showModal({ title: "Error", message: error.message });
+                                    }
+                                }
+                            });
+                        }, 800);
+                        return;
+                    }
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
 
-    items = await Promise.all(data.map(async (item) => {
-        if (item.type === 'image' && item.storage_path) {
-            const { data: urlData } = supabaseClient.storage.from('photos').getPublicUrl(item.storage_path);
-            return { ...item, imageUrl: urlData.publicUrl };
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (!session) {
+                    document.getElementById('loadingScreen').classList.add('hidden');
+                    document.getElementById('authScreen').classList.remove('hidden');
+                    document.getElementById('app').classList.add('hidden');
+                    return;
+                }
+
+                user = session.user;
+                document.getElementById('userAvatar').textContent = user.email.substring(0, 2).toUpperCase();
+                
+                setupRealtimeSubscription();
+                await loadItems();
+                
+                document.getElementById('loadingScreen').classList.add('hidden');
+                document.getElementById('authScreen').classList.add('hidden');
+                document.getElementById('app').classList.remove('hidden');
+
+                if (type === 'signup') {
+                    showModal({ title: "¡Bienvenido!", message: "Cuenta activada con éxito." });
+                }
+
+            } catch (err) {
+                console.error("Error:", err);
+                showModal({ title: "Error", message: "Ocurrió un error al inicializar la aplicación." });
+            }
         }
-        return item;
-    }));
-    renderContent();
-}
 
-function renderContent() {
-    renderBreadcrumbs();
-    renderGrid();
-}
+        // --- FUNCIONALIDADES DE LA APP ---
+        function setupRealtimeSubscription() {
+            supabaseClient.channel('gallery_changes')
+                .on('postgres_changes', { 
+                    event: '*', 
+                    schema: 'public', 
+                    table: 'gallery_items', 
+                    filter: `user_id=eq.${user.id}` 
+                }, () => loadItems())
+                .subscribe();
+        }
 
-function renderBreadcrumbs() {
-    const breadcrumbsEl = document.getElementById('breadcrumbs');
-    const actionsBar = document.getElementById('actionsBar');
-    const trashBtn = document.getElementById('trashBtn');
-    let html = '<button class="breadcrumb" onclick="goToRoot()">Mi Unidad</button>';
-    const path = getCurrentPath();
-    path.forEach(folder => {
-        html += ` <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg> <button class="breadcrumb" onclick="navigateToFolder('${folder.id}')">${folder.name}</button>`;
-    });
-    if (currentView === 'trash') {
-        html += ` <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg> <span class="breadcrumb-current">Papelera</span>`;
-        actionsBar.classList.add('hidden');
-        trashBtn.classList.add('active');
-    } else {
-        actionsBar.classList.remove('hidden');
-        trashBtn.classList.remove('active');
-    }
-    breadcrumbsEl.innerHTML = html;
-}
+        async function loadItems() {
+            if (!user) return;
+            const { data, error } = await supabaseClient
+                .from('gallery_items')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false });
+            
+            if (error) {
+                console.error("Error cargando items:", error);
+                return;
+            }
 
-function getCurrentPath() {
-    const path = [];
-    let current = currentFolderId;
-    while (current !== 'root') {
-        const folder = items.find(i => i.id === current);
-        if (folder) { path.unshift(folder); current = folder.parent_id; }
-        else break;
-    }
-    return path;
-}
+            items = await Promise.all(data.map(async (item) => {
+                if (item.type === 'image' && item.storage_path) {
+                    const { data: urlData } = supabaseClient.storage
+                        .from('photos')
+                        .getPublicUrl(item.storage_path);
+                    return { ...item, imageUrl: urlData.publicUrl };
+                }
+                return item;
+            }));
+            renderContent();
+        }
 
-function renderGrid() {
-    const contentArea = document.getElementById('contentArea');
-    const displayedItems = items.filter(item => currentView === 'trash' ? item.is_deleted : !item.is_deleted && item.parent_id === currentFolderId);
-    if (displayedItems.length === 0) {
-        contentArea.innerHTML = `<div class="empty-state"><p class="empty-title">No hay nada aquí</p></div>`;
-        return;
-    }
-    contentArea.innerHTML = `<div class="grid">${displayedItems.map(renderItem).join('')}</div>`;
-}
+        function renderContent() {
+            renderBreadcrumbs();
+            renderGrid();
+        }
 
-function renderItem(item) {
-    const preview = item.type === 'folder' ? `<svg class="folder-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>` : `<img src="${item.imageUrl}" alt="${item.name}" loading="lazy">`;
-    return `<div class="item-card"><div class="item-preview" onclick='handleItemClick(${JSON.stringify(item)})'>${preview}</div><div class="item-info"><div class="item-header"><p class="item-name">${item.name}</p><button class="item-menu-btn" onclick='showContextMenu(event, ${JSON.stringify(item)})'>⋮</button></div></div></div>`;
-}
+        function renderBreadcrumbs() {
+            const breadcrumbsEl = document.getElementById('breadcrumbs');
+            const actionsBar = document.getElementById('actionsBar');
+            const trashBtn = document.getElementById('trashBtn');
+            
+            let html = '<button class="breadcrumb" data-action="goToRoot">Mi Unidad</button>';
+            const path = getCurrentPath();
+            
+            path.forEach(folder => {
+                html += ` <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg> <button class="breadcrumb" data-folder-id="${folder.id}">${folder.name}</button>`;
+            });
+            
+            if (currentView === 'trash') {
+                html += ` <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg> <span class="breadcrumb-current">Papelera</span>`;
+                actionsBar.classList.add('hidden');
+                trashBtn.classList.add('active');
+            } else {
+                actionsBar.classList.remove('hidden');
+                trashBtn.classList.remove('active');
+            }
+            
+            breadcrumbsEl.innerHTML = html;
+            
+            // Bind breadcrumb events
+            breadcrumbsEl.querySelectorAll('[data-action="goToRoot"]').forEach(btn => {
+                btn.addEventListener('click', goToRoot);
+            });
+            breadcrumbsEl.querySelectorAll('[data-folder-id]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    navigateToFolder(e.target.dataset.folderId);
+                });
+            });
+        }
 
-function handleItemClick(item) {
-    if (item.type === 'folder') navigateToFolder(item.id);
-    else showPreview(item);
-}
+        function getCurrentPath() {
+            const path = [];
+            let current = currentFolderId;
+            while (current !== 'root') {
+                const folder = items.find(i => i.id === current);
+                if (folder) {
+                    path.unshift(folder);
+                    current = folder.parent_id;
+                } else break;
+            }
+            return path;
+        }
 
-function navigateToFolder(folderId) { currentFolderId = folderId; currentView = 'browser'; renderContent(); }
-function goToRoot() { currentFolderId = 'root'; currentView = 'browser'; renderContent(); }
-function toggleTrash() { currentView = currentView === 'trash' ? 'browser' : 'trash'; renderContent(); }
+        function renderGrid() {
+            const contentArea = document.getElementById('contentArea');
+            const displayedItems = items.filter(item => 
+                currentView === 'trash' 
+                    ? item.is_deleted 
+                    : !item.is_deleted && item.parent_id === currentFolderId
+            );
+            
+            if (displayedItems.length === 0) {
+                contentArea.innerHTML = `
+                    <div class="empty-state">
+                        <p class="empty-title">No hay nada aquí</p>
+                        <p class="empty-text">${currentView === 'trash' ? 'La papelera está vacía' : 'Crea una carpeta o sube fotos'}</p>
+                    </div>`;
+                return;
+            }
+            
+            contentArea.innerHTML = `<div class="grid">${displayedItems.map(renderItem).join('')}</div>`;
+            
+            // Bind click events
+            contentArea.querySelectorAll('[data-item-action="click"]').forEach(el => {
+                el.addEventListener('click', () => {
+                    const item = JSON.parse(el.dataset.item);
+                    handleItemClick(item);
+                });
+            });
+            
+            contentArea.querySelectorAll('[data-item-action="menu"]').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const item = JSON.parse(el.dataset.item);
+                    showContextMenu(e, item);
+                });
+            });
+        }
 
-async function createFolder() {
-    const name = prompt("Nombre de la carpeta:");
-    if (!name?.trim()) return;
-    await supabaseClient.from('gallery_items').insert({ user_id: user.id, name: name.trim(), type: 'folder', parent_id: currentFolderId, is_deleted: false });
-}
+        function renderItem(item) {
+            const itemJson = JSON.stringify(item).replace(/"/g, '&quot;');
+            const preview = item.type === 'folder' 
+                ? `<svg class="folder-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>` 
+                : `<img src="${item.imageUrl}" alt="${item.name}" loading="lazy">`;
+            
+            return `
+                <div class="item-card">
+                    <div class="item-preview" data-item-action="click" data-item="${itemJson}">
+                        ${preview}
+                    </div>
+                    <div class="item-info">
+                        <div class="item-header">
+                            <p class="item-name">${item.name}</p>
+                            <button class="item-menu-btn" data-item-action="menu" data-item="${itemJson}">⋮</button>
+                        </div>
+                    </div>
+                </div>`;
+        }
 
-async function handleFileUpload(e) {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-    const storagePath = `${user.id}/${Date.now()}_${file.name}`;
-    await supabaseClient.storage.from('photos').upload(storagePath, file);
-    await supabaseClient.from('gallery_items').insert({ user_id: user.id, name: file.name, type: 'image', parent_id: currentFolderId, storage_path: storagePath, is_deleted: false });
-}
+        function handleItemClick(item) {
+            if (item.type === 'folder') {
+                navigateToFolder(item.id);
+            } else {
+                showPreview(item);
+            }
+        }
 
-function showContextMenu(event, item) {
-    event.stopPropagation();
-    const menu = document.getElementById('contextMenu');
-    menu.style.left = `${event.clientX}px`;
-    menu.style.top = `${event.clientY}px`;
-    menu.innerHTML = `<button onclick='moveToTrash(${JSON.stringify(item)})'>Eliminar</button>`;
-    menu.classList.add('visible');
-    setTimeout(() => document.addEventListener('click', () => menu.classList.remove('visible'), {once:true}), 10);
-}
+        function navigateToFolder(folderId) {
+            currentFolderId = folderId;
+            currentView = 'browser';
+            renderContent();
+        }
 
-async function moveToTrash(item) {
-    await supabaseClient.from('gallery_items').update({ is_deleted: true }).eq('id', item.id);
-}
+        function goToRoot() {
+            currentFolderId = 'root';
+            currentView = 'browser';
+            renderContent();
+        }
 
-function showPreview(item) {
-    currentPreviewItem = item;
-    document.getElementById('previewImage').src = item.imageUrl;
-    document.getElementById('previewModal').classList.add('visible');
-}
+        function toggleTrash() {
+            currentView = currentView === 'trash' ? 'browser' : 'trash';
+            if (currentView === 'browser') {
+                currentFolderId = 'root';
+            }
+            renderContent();
+        }
 
-function closePreview() { document.getElementById('previewModal').classList.remove('visible'); }
+        async function createFolder() {
+            showModal({
+                title: "Nueva Carpeta",
+                message: "Escribe el nombre de la carpeta:",
+                showInput: true,
+                showCancel: true,
+                onConfirm: async (name) => {
+                    if (!name?.trim()) return;
+                    
+                    try {
+                        const { error } = await supabaseClient
+                            .from('gallery_items')
+                            .insert({
+                                user_id: user.id,
+                                name: name.trim(),
+                                type: 'folder',
+                                parent_id: currentFolderId,
+                                is_deleted: false
+                            });
+                        
+                        if (error) throw error;
+                    } catch (error) {
+                        showModal({ title: "Error", message: error.message });
+                    }
+                }
+            });
+        }
 
-init();
-    
-</script>
+        async function handleFileUpload(e) {
+            const file = e.target.files?.[0];
+            if (!file || !user) return;
+            
+            const uploadOverlay = document.getElementById('uploadOverlay');
+            uploadOverlay.classList.add('visible');
+            
+            try {
+                const storagePath = `${user.id}/${Date.now()}_${file.name}`;
+                
+                const { error: uploadError } = await supabaseClient.storage
+                    .from('photos')
+                    .upload(storagePath, file);
+                
+                if (uploadError) throw uploadError;
+                
+                const { error: dbError } = await supabaseClient
+                    .from('gallery_items')
+                    .insert({
+                        user_id: user.id,
+                        name: file.name,
+                        type: 'image',
+                        parent_id: currentFolderId,
+                        storage_path: storagePath,
+                        is_deleted: false
+                    });
+                
+                if (dbError) throw dbError;
+                
+            } catch (error) {
+                showModal({ title: "Error", message: "No se pudo subir el archivo: " + error.message });
+            } finally {
+                uploadOverlay.classList.remove('visible');
+                e.target.value = '';
+            }
+        }
+
+        function showContextMenu(event, item) {
+            const menu = document.getElementById('contextMenu');
+            menu.style.left = `${event.clientX}px`;
+            menu.style.top = `${event.clientY}px`;
+            
+            if (currentView === 'trash') {
+                menu.innerHTML = `
+                    <button class="context-menu-item restore" data-action="restore">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                        </svg>
+                        Restaurar
+                    </button>
+                    <button class="context-menu-item danger" data-action="delete-permanent">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                        Eliminar Permanentemente
+                    </button>`;
+            } else {
+                menu.innerHTML = `
+                    <button class="context-menu-item danger" data-action="trash">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                        Mover a Papelera
+                    </button>`;
+            }
+            
+            menu.classList.add('visible');
+            
+            // Bind menu actions
+            menu.querySelectorAll('[data-action]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const action = btn.dataset.action;
+                    menu.classList.remove('visible');
+                    
+                    if (action === 'trash') {
+                        await moveToTrash(item);
+                    } else if (action === 'restore') {
+                        await restoreItem(item);
+                    } else if (action === 'delete-permanent') {
+                        await deletePermanently(item);
+                    }
+                });
+            });
+            
+            setTimeout(() => {
+                document.addEventListener('click', () => {
+                    menu.classList.remove('visible');
+                }, { once: true });
+            }, 10);
+        }
+
+        async function moveToTrash(item) {
+            try {
+                const { error } = await supabaseClient
+                    .from('gallery_items')
+                    .update({ is_deleted: true })
+                    .eq('id', item.id);
+                
+                if (error) throw error;
+            } catch (error) {
+                showModal({ title: "Error", message: error.message });
+            }
+        }
+
+        async function restoreItem(item) {
+            try {
+                const { error } = await supabaseClient
+                    .from('gallery_items')
+                    .update({ is_deleted: false })
+                    .eq('id', item.id);
+                
+                if (error) throw error;
+                showModal({ title: "✅ Restaurado", message: "El elemento ha sido restaurado." });
+            } catch (error) {
+                showModal({ title: "Error", message: error.message });
+            }
+        }
+
+        async function deletePermanently(item) {
+            showModal({
+                title: "⚠️ Confirmar",
+                message: "¿Eliminar permanentemente? Esta acción no se puede deshacer.",
+                showCancel: true,
+                onConfirm: async () => {
+                    try {
+                        if (item.storage_path) {
+                            await supabaseClient.storage
+                                .from('photos')
+                                .remove([item.storage_path]);
+                        }
+                        
+                        const { error } = await supabaseClient
+                            .from('gallery_items')
+                            .delete()
+                            .eq('id', item.id);
+                        
+                        if (error) throw error;
+                        showModal({ title: "✅ Eliminado", message: "Elemento eliminado permanentemente." });
+                    } catch (error) {
+                        showModal({ title: "Error", message: error.message });
+                    }
+                }
+            });
+        }
+
+        function showPreview(item) {
+            currentPreviewItem = item;
+            document.getElementById('previewImage').src = item.imageUrl;
+            document.getElementById('previewTitle').textContent = item.name;
+            document.getElementById('previewModal').classList.add('visible');
+        }
+
+        function closePreview() {
+            document.getElementById('previewModal').classList.remove('visible');
+            currentPreviewItem = null;
+        }
+
+        async function downloadCurrentImage() {
+            if (!currentPreviewItem) return;
+            
+            try {
+                const response = await fetch(currentPreviewItem.imageUrl);
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = currentPreviewItem.name;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                showModal({ title: "Error", message: "No se pudo descargar la imagen." });
+            }
+        }
+
+        async function deleteCurrentImage() {
+            if (!currentPreviewItem) return;
+            closePreview();
+            await moveToTrash(currentPreviewItem);
+        }
+
+        // --- EVENT LISTENERS ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Auth screen
+            document.getElementById('mainAuthBtn').addEventListener('click', handleAuth);
+            document.getElementById('toggleAuthLink').addEventListener('click', (e) => {
+                e.preventDefault();
+                toggleAuthMode();
+            });
+            document.getElementById('resetPasswordLink').addEventListener('click', (e) => {
+                e.preventDefault();
+                resetPassword();
+            });
+            
+            // App navigation
+            document.getElementById('logoBtn').addEventListener('click', goToRoot);
+            document.getElementById('trashBtn').addEventListener('click', toggleTrash);
+            document.getElementById('userAvatar').addEventListener('click', handleLogout);
+            
+            // Actions
+            document.getElementById('createFolderBtn').addEventListener('click', createFolder);
+            document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+            
+            // Preview modal
+            document.getElementById('closePreviewBtn').addEventListener('click', closePreview);
+            document.getElementById('downloadBtn').addEventListener('click', downloadCurrentImage);
+            document.getElementById('deleteImageBtn').addEventListener('click', deleteCurrentImage);
+            
+            // Allow Enter key for auth
+            document.getElementById('authPassword').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleAuth();
+            });
+            
+            // Initialize app
+            init();
+        });
+    </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
