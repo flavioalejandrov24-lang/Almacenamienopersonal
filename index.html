@@ -24,19 +24,25 @@
         }
 
 
-        /* Estilos para el menú de usuario */
+     /* Estilos para el menú de usuario */
 #userMenu {
     display: none;
     position: absolute;
+    z-index: 1001 !important; /* Muy importante */
 }
 
 #userMenu.visible {
-    display: block;
+    display: block !important;
+}
+
+.user-avatar {
+    transition: background 0.2s;
 }
 
 .user-avatar:hover {
     background: #cbd5e1;
 }
+
         
         .header {
             position: fixed;
@@ -1379,6 +1385,7 @@
     
 </body>
 </html>
+
 
 
 
