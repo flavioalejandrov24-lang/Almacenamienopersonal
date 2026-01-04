@@ -721,7 +721,7 @@ async function handleLogout() {
     else window.location.reload();
 }
 
-javascriptasync function init() {
+ async function init() {  
     try {
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const accessToken = hashParams.get('access_token');
@@ -774,19 +774,7 @@ javascriptasync function init() {
         document.getElementById('authScreen').classList.remove('hidden');
     }
 }
-        // 🔥 NUEVO: Mensaje de bienvenida si viene de confirmación
-        if (accessToken && type === 'signup') {
-            setTimeout(() => {
-                alert('¡Bienvenido! Tu cuenta ha sido confirmada exitosamente.');
-            }, 500);
-        }
-    } catch (err) {
-        console.error("Error de inicialización:", err);
-        document.getElementById('loadingScreen').classList.add('hidden');
-        document.getElementById('authScreen').classList.remove('hidden');
-    }
-}
-
+      
         function setupRealtimeSubscription() {
             supabaseClient
                 .channel('gallery_changes')
@@ -1235,6 +1223,7 @@ javascriptasync function init() {
     </script>
 </body>
 </html>
+
 
 
 
