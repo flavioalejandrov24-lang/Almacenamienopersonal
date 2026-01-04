@@ -633,7 +633,7 @@
     </div>
 
     <script>
-      // 🔒 CONFIGURACIÓN SEGURA
+    / 🔒 CONFIGURACIÓN SEGURA
 const SUPABASE_URL = window.SUPABASE_CONFIG?.url;
 const SUPABASE_ANON_KEY = window.SUPABASE_CONFIG?.key;
 
@@ -761,6 +761,7 @@ async function init() {
         document.getElementById('authScreen').classList.add('hidden');
         document.getElementById('app').classList.remove('hidden');
 
+        // Mensaje de bienvenida tras confirmar registro
         if (type === 'signup') {
             setTimeout(() => alert('¡Bienvenido! Tu cuenta ha sido confirmada exitosamente.'), 500);
         }
@@ -771,7 +772,6 @@ async function init() {
         document.getElementById('authScreen').classList.remove('hidden');
     }
 }
-
         // Mensaje de bienvenida tras confirmar registro
         if (type === 'signup') {
             setTimeout(() => alert('¡Bienvenido! Tu cuenta ha sido confirmada con éxito.'), 500);
@@ -1245,6 +1245,7 @@ async function init() {
     </script>
 </body>
 </html>
+
 
 
 
