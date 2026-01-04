@@ -741,32 +741,26 @@ async function handleLogout() {
 }
         
         
-      async function init() {
+     async function init() {
     try {
         // 1. Detectar tokens de Supabase en la URL (#access_token=...)
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const accessToken = hashParams.get('access_token');
-        const type = hashParams.get('type'); // Puede ser 'signup' o 'recovery'
+        const type = hashParams.get('type'); 
 
         if (accessToken) {
-            // Limpiamos la URL inmediatamente para evitar errores 404 al recargar
+            // Limpiamos la URL inmediatamente para evitar errores 404
             window.history.replaceState({}, document.title, window.location.pathname);
 
             if (type === 'recovery') {
-                // CASO: RECUPERACIÓN DE CONTRASEÑA
                 const newPassword = prompt("Introduce tu nueva contraseña:");
                 if (newPassword) {
                     const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
                     if (error) alert("Error al actualizar: " + error.message);
                     else alert("¡Contraseña actualizada! Ya puedes iniciar sesión con tu nueva clave.");
                 }
-                window.location.reload(); // Recargamos para limpiar estado de auth
+                window.location.reload(); 
                 return;
-            }
-            
-            if (type === 'signup') {
-                // CASO: CONFIRMACIÓN DE REGISTRO
-                console.log('Confirmación de email detectada');
             }
         }
 
@@ -790,6 +784,18 @@ async function handleLogout() {
         document.getElementById('loadingScreen').classList.add('hidden');
         document.getElementById('authScreen').classList.add('hidden');
         document.getElementById('app').classList.remove('hidden');
+
+        // 4. Mensaje de bienvenida tras confirmar registro
+        if (type === 'signup') {
+            setTimeout(() => alert('¡Bienvenido! Tu cuenta ha sido confirmada con éxito.'), 500);
+        }
+
+    } catch (err) {
+        console.error("Error de inicialización:", err);
+        document.getElementById('loadingScreen').classList.add('hidden');
+        document.getElementById('authScreen').classList.remove('hidden');
+    }
+}
 
         // Mensaje de bienvenida tras confirmar registro
         if (type === 'signup') {
@@ -1264,6 +1270,7 @@ async function handleLogout() {
     </script>
 </body>
 </html>
+
 
 
 
