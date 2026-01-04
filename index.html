@@ -6,6 +6,7 @@
     <title>PhotoCloud - Tu Galería Personal</title>
     <script src="config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+   
     <style>
         * {
             margin: 0;
@@ -22,6 +23,21 @@
     min-height: 100vh;
         }
 
+
+        /* Estilos para el menú de usuario */
+#userMenu {
+    display: none;
+    position: absolute;
+}
+
+#userMenu.visible {
+    display: block;
+}
+
+.user-avatar:hover {
+    background: #cbd5e1;
+}
+        
         .header {
             position: fixed;
     top: 0;
@@ -521,6 +537,8 @@
             display: none !important;
         }
     </style>
+
+    
 </head>
 <body>
     <div id="loadingScreen" class="loading-screen">
@@ -560,17 +578,45 @@
                 <h1 class="logo-text">AxeltechCloud</h1>
             </div>
             
-            <div class="header-actions">
-                <button class="btn btn-trash" id="trashBtn" onclick="toggleTrash()">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                    </svg>
-                    <span class="hidden sm:inline">Papelera</span>
-                </button>
-                <div class="user-avatar" id="userAvatar" onclick="handleLogout()" style="cursor: pointer;" title="Cerrar sesión"></div>
+           <div class="header-actions">
+    <!-- ✅ El botoncito de papelera NO cambia, sigue igual -->
+    <button class="btn btn-trash" id="trashBtn" onclick="toggleTrash()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        </svg>
+        <span class="hidden sm:inline">Papelera</span>
+    </button>
+    
+    <!-- 🆕 Esto es lo nuevo: el avatar ahora abre un menú en lugar de cerrar sesión directamente -->
+    <div style="position: relative;">
+        <div class="user-avatar" id="userAvatar" onclick="toggleUserMenu()" style="cursor: pointer;" title="Opciones de cuenta"></div>
+        
+        <!-- 🆕 Este es el menú desplegable (oculto por defecto) -->
+        <div id="userMenu" class="context-menu" style="right: 0; top: 48px; left: auto; min-width: 200px;">
+            <div style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0; margin-bottom: 8px;">
+                <p style="font-size: 12px; color: #64748b; margin-bottom: 4px;">Cuenta</p>
+                <p style="font-size: 14px; color: #1e293b; font-weight: 500;" id="userEmailDisplay"></p>
             </div>
-        </nav>
-
+            <button class="context-menu-item" onclick="handleLogout()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Cerrar Sesión
+            </button>
+            <button class="context-menu-item danger" onclick="confirmDeleteAccount()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    <line x1="10" y1="11" x2="10" y2="17"/>
+                    <line x1="14" y1="11" x2="14" y2="17"/>
+                </svg>
+                Eliminar mi Cuenta
+            </button>
+        </div>
+    </div>
+</div>
+            
         <main class="main">
             <div class="breadcrumbs-section">
                 <div class="breadcrumbs-container">
@@ -632,577 +678,708 @@
         </div>
     </div>
 
-    <script>
-        // 🔒 CONFIGURACIÓN SEGURA
-        const SUPABASE_URL = window.SUPABASE_CONFIG?.url;
-        const SUPABASE_ANON_KEY = window.SUPABASE_CONFIG?.key;
+<script>
+    // 🔒 CONFIGURACIÓN SEGURA
+    const SUPABASE_URL = window.SUPABASE_CONFIG?.url;
+    const SUPABASE_ANON_KEY = window.SUPABASE_CONFIG?.key;
 
-        if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-            document.getElementById('loadingScreen').innerHTML = `
-                <div class="error-message">
-                    <strong>Error de Configuración</strong><br>
-                    No se encontraron las credenciales de Supabase.
-                </div>
-            `;
-            throw new Error('Faltan credenciales de Supabase');
-        }
-
-        // Inicializar cliente Supabase
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        let user = null;
-        let items = [];
-        let currentFolderId = 'root';
-        let currentView = 'browser';
-        let currentPreviewItem = null;
-
-
-        let isSignUpMode = false; // Controla si estamos en login o registro
-
-function toggleAuthMode() {
-    isSignUpMode = !isSignUpMode;
-    const title = document.getElementById('authTitle');
-    const btn = document.getElementById('mainAuthBtn');
-    const toggleText = document.getElementById('toggleAuthText');
-
-    if (isSignUpMode) {
-        title.textContent = "Crear Cuenta";
-        btn.textContent = "Registrarse";
-        toggleText.innerHTML = '¿Ya tienes cuenta? <a href="#" onclick="toggleAuthMode()" style="color: #2563eb; text-decoration: none; font-weight: 500;">Inicia Sesión</a>';
-    } else {
-        title.textContent = "Iniciar Sesión";
-        btn.textContent = "Entrar";
-        toggleText.innerHTML = '¿No tienes cuenta? <a href="#" onclick="toggleAuthMode()" style="color: #2563eb; text-decoration: none; font-weight: 500;">Regístrate</a>';
-    }
-}
-
-
-async function handleAuth() {
-    const email = document.getElementById('authEmail').value;
-    const password = document.getElementById('authPassword').value;
-
-    if (!email || !password) {
-        alert("Por favor, rellena todos los campos");
-        return;
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+        document.getElementById('loadingScreen').innerHTML = `
+            <div class="error-message">
+                <strong>Error de Configuración</strong><br>
+                No se encontraron las credenciales de Supabase.
+            </div>
+        `;
+        throw new Error('Faltan credenciales de Supabase');
     }
 
-    try {
-        let result;
+    // Inicializar cliente Supabase
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let user = null;
+    let items = [];
+    let currentFolderId = 'root';
+    let currentView = 'browser';
+    let currentPreviewItem = null;
+    let isSignUpMode = false;
+
+    function toggleAuthMode() {
+        isSignUpMode = !isSignUpMode;
+        const title = document.getElementById('authTitle');
+        const btn = document.getElementById('mainAuthBtn');
+        const toggleText = document.getElementById('toggleAuthText');
+
         if (isSignUpMode) {
-            // Registro de nuevo usuario
-            result = await supabaseClient.auth.signUp({ email, password });
-            if (result.error) throw result.error;
-            alert("¡Registro exitoso! Ya puedes iniciar sesión.");
-            toggleAuthMode(); // Cambiamos a modo login automáticamente
+            title.textContent = "Crear Cuenta";
+            btn.textContent = "Registrarse";
+            toggleText.innerHTML = '¿Ya tienes cuenta? <a href="#" onclick="toggleAuthMode()" style="color: #2563eb; text-decoration: none; font-weight: 500;">Inicia Sesión</a>';
         } else {
-            // Inicio de sesión
-            result = await supabaseClient.auth.signInWithPassword({ email, password });
-            if (result.error) throw result.error;
-            init(); // Recargamos la app para entrar
+            title.textContent = "Iniciar Sesión";
+            btn.textContent = "Entrar";
+            toggleText.innerHTML = '¿No tienes cuenta? <a href="#" onclick="toggleAuthMode()" style="color: #2563eb; text-decoration: none; font-weight: 500;">Regístrate</a>';
         }
-    } catch (error) {
-        alert("Error: " + error.message);
     }
-}
 
+    async function handleAuth() {
+        const email = document.getElementById('authEmail').value;
+        const password = document.getElementById('authPassword').value;
 
-async function resetPassword() {
-    const email = document.getElementById('authEmail').value;
-    if (!email) {
-        alert("Por favor, introduce tu correo electrónico primero.");
-        return;
-    }
-    const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
-    if (error) alert("Error: " + error.message);
-    else alert("Se ha enviado un correo para restablecer tu contraseña.");
-}
-
-async function handleLogout() {
-    const { error } = await supabaseClient.auth.signOut();
-    if (error) {
-        alert("Error al cerrar sesión: " + error.message);
-    } else {
-        // Al cerrar sesión, reiniciamos la página para limpiar el estado
-        window.location.reload();
-    }
-}
-        
-        
-       async function init() {
-    try {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        
-        if (!session) {
-            // Si no hay sesión, mostramos login y ocultamos carga
-            document.getElementById('loadingScreen').classList.add('hidden');
-            document.getElementById('authScreen').classList.remove('hidden');
-            document.getElementById('app').classList.add('hidden');
+        if (!email || !password) {
+            alert("Por favor, rellena todos los campos");
             return;
         }
 
-        // Si hay sesión, configuramos el usuario y cargamos la app
-        user = session.user;
-        document.getElementById('userAvatar').textContent = user.email.substring(0, 2).toUpperCase();
-        
-        setupRealtimeSubscription();
-        await loadItems();
-        
-        document.getElementById('loadingScreen').classList.add('hidden');
-        document.getElementById('authScreen').classList.add('hidden');
-        document.getElementById('app').classList.remove('hidden');
-    } catch (err) {
-        console.error("Error de inicialización:", err);
-    }
-}
-
-        function setupRealtimeSubscription() {
-            supabaseClient
-                .channel('gallery_changes')
-                .on(
-                    'postgres_changes',
-                    {
-                        event: '*',
-                        schema: 'public',
-                        table: 'gallery_items',
-                        filter: `user_id=eq.${user.id}`
-                    },
-                    () => {
-                        loadItems();
+        try {
+            let result;
+            if (isSignUpMode) {
+                result = await supabaseClient.auth.signUp({ 
+                    email, 
+                    password,
+                    options: {
+                        emailRedirectTo: 'https://flavioalejandrov24-lang.github.io/Almacenamienopersonal/'
                     }
-                )
-                .subscribe();
-        }
-
-        async function loadItems() {
-            if (!user) return;
-
-            const { data, error } = await supabaseClient
-                .from('gallery_items')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: false });
-
-            if (error) {
-                console.error("Error cargando items:", error);
-                return;
-            }
-
-            items = await Promise.all(
-                data.map(async (item) => {
-                    if (item.type === 'image' && item.storage_path) {
-                        const { data: urlData } = supabaseClient.storage
-                            .from('photos')
-                            .getPublicUrl(item.storage_path);
-                        return { ...item, imageUrl: urlData.publicUrl };
-                    }
-                    return item;
-                })
-            );
-
-            renderContent();
-        }
-
-        function renderContent() {
-            renderBreadcrumbs();
-            renderGrid();
-        }
-
-        function renderBreadcrumbs() {
-            const breadcrumbsEl = document.getElementById('breadcrumbs');
-            const actionsBar = document.getElementById('actionsBar');
-            const trashBtn = document.getElementById('trashBtn');
-            
-            let html = '<button class="breadcrumb" onclick="goToRoot()">Mi Unidad</button>';
-            
-            const path = getCurrentPath();
-            path.forEach(folder => {
-                html += `
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 18l6-6-6-6"/>
-                    </svg>
-                    <button class="breadcrumb" onclick="navigateToFolder('${folder.id}')">${folder.name}</button>
-                `;
-            });
-            
-            if (currentView === 'trash') {
-                html += `
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 18l6-6-6-6"/>
-                    </svg>
-                    <span class="breadcrumb-current">Papelera</span>
-                `;
-                actionsBar.classList.add('hidden');
-                trashBtn.classList.add('active');
+                });
+                if (result.error) throw result.error;
+                alert("¡Registro exitoso! 📧\n\nHemos enviado un correo de confirmación a " + email + ".\nRevisa tu bandeja de entrada (y spam) y haz clic en el enlace para activar tu cuenta.");
+                toggleAuthMode();
             } else {
-                actionsBar.classList.remove('hidden');
-                trashBtn.classList.remove('active');
+                result = await supabaseClient.auth.signInWithPassword({ email, password });
+                if (result.error) throw result.error;
+                init();
             }
+        } catch (error) {
+            alert("Error: " + error.message);
+        }
+    }
+
+    async function resetPassword() {
+        const email = document.getElementById('authEmail').value;
+        if (!email) {
+            alert("Por favor, introduce tu correo electrónico primero.");
+            return;
+        }
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
+        if (error) alert("Error: " + error.message);
+        else alert("Se ha enviado un correo para restablecer tu contraseña.");
+    }
+
+    async function handleLogout() {
+        const { error } = await supabaseClient.auth.signOut();
+        if (error) {
+            alert("Error al cerrar sesión: " + error.message);
+        } else {
+            window.location.reload();
+        }
+    }
+
+    async function init() {
+        try {
+            const hashParams = new URLSearchParams(window.location.hash.substring(1));
+            const accessToken = hashParams.get('access_token');
+            const type = hashParams.get('type');
+
+            if (accessToken && type === 'signup') {
+                console.log('Confirmación de email detectada');
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+
+            const { data: { session } } = await supabaseClient.auth.getSession();
             
-            breadcrumbsEl.innerHTML = html;
-        }
-
-        function getCurrentPath() {
-            const path = [];
-            let current = currentFolderId;
-            while (current !== 'root') {
-                const folder = items.find(i => i.id === current);
-                if (folder) {
-                    path.unshift(folder);
-                    current = folder.parent_id;
-                } else {
-                    break;
-                }
-            }
-            return path;
-        }
-
-        function renderGrid() {
-            const contentArea = document.getElementById('contentArea');
-            const displayedItems = items.filter(item => {
-                if (currentView === 'trash') return item.is_deleted;
-                return !item.is_deleted && item.parent_id === currentFolderId;
-            });
-
-            if (displayedItems.length === 0) {
-                const icon = currentView === 'trash' ? 
-                    '<svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' :
-                    '<svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
-                
-                contentArea.innerHTML = `
-                    <div class="empty-state">
-                        ${icon}
-                        <p class="empty-title">${currentView === 'trash' ? 'La papelera está vacía' : 'No hay elementos aquí'}</p>
-                        <p class="empty-text">Empieza a organizar tus recuerdos</p>
-                    </div>
-                `;
+            if (!session) {
+                document.getElementById('loadingScreen').classList.add('hidden');
+                document.getElementById('authScreen').classList.remove('hidden');
+                document.getElementById('app').classList.add('hidden');
                 return;
             }
 
-            contentArea.innerHTML = `<div class="grid">${displayedItems.map(renderItem).join('')}</div>`;
+            user = session.user;
+            document.getElementById('userAvatar').textContent = user.email.substring(0, 2).toUpperCase();
+            document.getElementById('userEmailDisplay').textContent = user.email;
+            
+            setupRealtimeSubscription();
+            await loadItems();
+            
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            
+            if (accessToken && type === 'signup') {
+                setTimeout(() => {
+                    alert('¡Bienvenido! Tu cuenta ha sido confirmada exitosamente.');
+                }, 500);
+            }
+        } catch (err) {
+            console.error("Error de inicialización:", err);
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('authScreen').classList.remove('hidden');
+        }
+    }
+
+    function setupRealtimeSubscription() {
+        supabaseClient
+            .channel('gallery_changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'gallery_items',
+                    filter: `user_id=eq.${user.id}`
+                },
+                () => {
+                    loadItems();
+                }
+            )
+            .subscribe();
+    }
+
+    async function loadItems() {
+        if (!user) return;
+
+        const { data, error } = await supabaseClient
+            .from('gallery_items')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error("Error cargando items:", error);
+            return;
         }
 
-        function renderItem(item) {
-            const preview = item.type === 'folder' ? 
-                `<svg class="folder-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>` :
-                `<img src="${item.imageUrl}" alt="${item.name}" loading="lazy">`;
+        items = await Promise.all(
+            data.map(async (item) => {
+                if (item.type === 'image' && item.storage_path) {
+                    const { data: urlData } = supabaseClient.storage
+                        .from('photos')
+                        .getPublicUrl(item.storage_path);
+                    return { ...item, imageUrl: urlData.publicUrl };
+                }
+                return item;
+            })
+        );
 
-            return `
-                <div class="item-card">
-                    <div class="item-preview" onclick='handleItemClick(${JSON.stringify(item)})'>
-                        ${preview}
-                    </div>
-                    <div class="item-info">
-                        <div class="item-header">
-                            <p class="item-name">${item.name}</p>
-                            <button class="item-menu-btn" onclick='showContextMenu(event, ${JSON.stringify(item)})'>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
-                                </svg>
-                            </button>
-                        </div>
-                        <p class="item-type">${item.type === 'folder' ? 'Carpeta' : 'Imagen'}</p>
-                    </div>
+        renderContent();
+    }
+
+    function renderContent() {
+        renderBreadcrumbs();
+        renderGrid();
+    }
+
+    function renderBreadcrumbs() {
+        const breadcrumbsEl = document.getElementById('breadcrumbs');
+        const actionsBar = document.getElementById('actionsBar');
+        const trashBtn = document.getElementById('trashBtn');
+        
+        let html = '<button class="breadcrumb" onclick="goToRoot()">Mi Unidad</button>';
+        
+        const path = getCurrentPath();
+        path.forEach(folder => {
+            html += `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 18l6-6-6-6"/>
+                </svg>
+                <button class="breadcrumb" onclick="navigateToFolder('${folder.id}')">${folder.name}</button>
+            `;
+        });
+        
+        if (currentView === 'trash') {
+            html += `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 18l6-6-6-6"/>
+                </svg>
+                <span class="breadcrumb-current">Papelera</span>
+            `;
+            actionsBar.classList.add('hidden');
+            trashBtn.classList.add('active');
+        } else {
+            actionsBar.classList.remove('hidden');
+            trashBtn.classList.remove('active');
+        }
+        
+        breadcrumbsEl.innerHTML = html;
+    }
+
+    function getCurrentPath() {
+        const path = [];
+        let current = currentFolderId;
+        while (current !== 'root') {
+            const folder = items.find(i => i.id === current);
+            if (folder) {
+                path.unshift(folder);
+                current = folder.parent_id;
+            } else {
+                break;
+            }
+        }
+        return path;
+    }
+
+    function renderGrid() {
+        const contentArea = document.getElementById('contentArea');
+        const displayedItems = items.filter(item => {
+            if (currentView === 'trash') return item.is_deleted;
+            return !item.is_deleted && item.parent_id === currentFolderId;
+        });
+
+        if (displayedItems.length === 0) {
+            const icon = currentView === 'trash' ? 
+                '<svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' :
+                '<svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
+            
+            contentArea.innerHTML = `
+                <div class="empty-state">
+                    ${icon}
+                    <p class="empty-title">${currentView === 'trash' ? 'La papelera está vacía' : 'No hay elementos aquí'}</p>
+                    <p class="empty-text">Empieza a organizar tus recuerdos</p>
                 </div>
             `;
+            return;
         }
 
-        function handleItemClick(item) {
-            if (item.type === 'folder') {
-                navigateToFolder(item.id);
-            } else {
-                showPreview(item);
-            }
+        contentArea.innerHTML = `<div class="grid">${displayedItems.map(renderItem).join('')}</div>`;
+    }
+
+    function renderItem(item) {
+        const preview = item.type === 'folder' ? 
+            `<svg class="folder-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>` :
+            `<img src="${item.imageUrl}" alt="${item.name}" loading="lazy">`;
+
+        return `
+            <div class="item-card">
+                <div class="item-preview" onclick='handleItemClick(${JSON.stringify(item)})'>
+                    ${preview}
+                </div>
+                <div class="item-info">
+                    <div class="item-header">
+                        <p class="item-name">${item.name}</p>
+                        <button class="item-menu-btn" onclick='showContextMenu(event, ${JSON.stringify(item)})'>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="item-type">${item.type === 'folder' ? 'Carpeta' : 'Imagen'}</p>
+                </div>
+            </div>
+        `;
+    }
+
+    function handleItemClick(item) {
+        if (item.type === 'folder') {
+            navigateToFolder(item.id);
+        } else {
+            showPreview(item);
+        }
+    }
+
+    function navigateToFolder(folderId) {
+        currentFolderId = folderId;
+        currentView = 'browser';
+        renderContent();
+    }
+
+    function goToRoot() {
+        currentFolderId = 'root';
+        currentView = 'browser';
+        renderContent();
+    }
+
+    function toggleTrash() {
+        currentView = currentView === 'trash' ? 'browser' : 'trash';
+        renderContent();
+    }
+
+    async function createFolder() {
+        const name = prompt("Nombre de la carpeta:");
+        if (!name?.trim()) return;
+
+        const { error } = await supabaseClient
+            .from('gallery_items')
+            .insert({
+                user_id: user.id,
+                name: name.trim(),
+                type: 'folder',
+                parent_id: currentFolderId,
+                is_deleted: false
+            });
+
+        if (error) {
+            console.error("Error creando carpeta:", error);
+            alert("Error al crear la carpeta");
+        }
+    }
+
+    async function handleFileUpload(e) {
+        const file = e.target.files?.[0];
+        if (!file || !user) return;
+
+        if (!file.type.startsWith('image/')) {
+            alert("Solo se permiten imágenes");
+            return;
         }
 
-        function navigateToFolder(folderId) {
-            currentFolderId = folderId;
-            currentView = 'browser';
-            renderContent();
+        if (file.size > 5 * 1024 * 1024) {
+            alert("La imagen no puede superar 5MB");
+            return;
         }
 
-        function goToRoot() {
-            currentFolderId = 'root';
-            currentView = 'browser';
-            renderContent();
-        }
+        const uploadOverlay = document.getElementById('uploadOverlay');
+        const progressFill = document.getElementById('progressFill');
+        const fileInput = document.getElementById('fileInput');
+        
+        uploadOverlay.classList.add('visible');
+        progressFill.style.width = '0%';
 
-        function toggleTrash() {
-            currentView = currentView === 'trash' ? 'browser' : 'trash';
-            renderContent();
-        }
+        try {
+            const timestamp = Date.now();
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+            const storagePath = `${user.id}/${fileName}`;
 
-        async function createFolder() {
-            const name = prompt("Nombre de la carpeta:");
-            if (!name?.trim()) return;
+            const { error: uploadError } = await supabaseClient.storage
+                .from('photos')
+                .upload(storagePath, file, {
+                    cacheControl: '3600',
+                    upsert: false
+                });
 
-            const { error } = await supabaseClient
+            if (uploadError) throw uploadError;
+
+            progressFill.style.width = '50%';
+
+            const { error: dbError } = await supabaseClient
                 .from('gallery_items')
                 .insert({
                     user_id: user.id,
-                    name: name.trim(),
-                    type: 'folder',
+                    name: file.name,
+                    type: 'image',
                     parent_id: currentFolderId,
+                    storage_path: storagePath,
                     is_deleted: false
                 });
 
-            if (error) {
-                console.error("Error creando carpeta:", error);
-                alert("Error al crear la carpeta");
-            }
-        }
+            if (dbError) throw dbError;
 
-        async function handleFileUpload(e) {
-            const file = e.target.files?.[0];
-            if (!file || !user) return;
-
-            if (!file.type.startsWith('image/')) {
-                alert("Solo se permiten imágenes");
-                return;
-            }
-
-            if (file.size > 5 * 1024 * 1024) {
-                alert("La imagen no puede superar 5MB");
-                return;
-            }
-
-            const uploadOverlay = document.getElementById('uploadOverlay');
-            const progressFill = document.getElementById('progressFill');
-            const fileInput = document.getElementById('fileInput');
-            
-            uploadOverlay.classList.add('visible');
-            progressFill.style.width = '0%';
-
-            try {
-                const timestamp = Date.now();
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-                const storagePath = `${user.id}/${fileName}`;
-
-                const { error: uploadError } = await supabaseClient.storage
-                    .from('photos')
-                    .upload(storagePath, file, {
-                        cacheControl: '3600',
-                        upsert: false
-                    });
-
-                if (uploadError) throw uploadError;
-
-                progressFill.style.width = '50%';
-
-                const { error: dbError } = await supabaseClient
-                    .from('gallery_items')
-                    .insert({
-                        user_id: user.id,
-                        name: file.name,
-                        type: 'image',
-                        parent_id: currentFolderId,
-                        storage_path: storagePath,
-                        is_deleted: false
-                    });
-
-                if (dbError) throw dbError;
-
-                progressFill.style.width = '100%';
-                fileInput.value = '';
-            } catch (error) {
-                console.error("Error subiendo archivo:", error);
-                alert("Error al subir la imagen");
-            } finally {
-                setTimeout(() => {
-                    uploadOverlay.classList.remove('visible');
-                    progressFill.style.width = '0%';
-                }, 500);
-            }
-        }
-
-        function showContextMenu(event, item) {
-            event.stopPropagation();
-            
-            const menu = document.getElementById('contextMenu');
-            const rect = event.target.getBoundingClientRect();
-            
-            menu.style.left = `${rect.left}px`;
-            menu.style.top = `${rect.bottom + 8}px`;
-            
-            if (currentView === 'trash') {
-                menu.innerHTML = `
-                    <button class="context-menu-item restore" onclick='restoreItem(${JSON.stringify(item)})'>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M1 4v6h6M23 20v-6h-6"/>
-                            <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
-                        </svg>
-                        Restaurar
-                    </button>
-                    <button class="context-menu-item danger" onclick='permanentDelete(${JSON.stringify(item)})'>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                        </svg>
-                        Eliminar Definitivo
-                    </button>
-                `;
-            } else {
-                menu.innerHTML = `
-                    <button class="context-menu-item" onclick='renameItem(${JSON.stringify(item)})'>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                        Renombrar
-                    </button>
-                    ${item.type === 'image' ? `
-                        <button class="context-menu-item" onclick='downloadImage(${JSON.stringify(item)})'>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-                            </svg>
-                            Descargar
-                        </button>
-                    ` : ''}
-                    <button class="context-menu-item danger" onclick='moveToTrash(${JSON.stringify(item)})'>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                        </svg>
-                        Eliminar
-                    </button>
-                `;
-            }
-            
-            menu.classList.add('visible');
-            
+            progressFill.style.width = '100%';
+            fileInput.value = '';
+        } catch (error) {
+            console.error("Error subiendo archivo:", error);
+            alert("Error al subir la imagen");
+        } finally {
             setTimeout(() => {
-                document.addEventListener('click', closeContextMenu);
-            }, 10);
+                uploadOverlay.classList.remove('visible');
+                progressFill.style.width = '0%';
+            }, 500);
         }
+    }
 
-        function closeContextMenu() {
-            const menu = document.getElementById('contextMenu');
-            menu.classList.remove('visible');
-            document.removeEventListener('click', closeContextMenu);
+    function showContextMenu(event, item) {
+        event.stopPropagation();
+        
+        const menu = document.getElementById('contextMenu');
+        const rect = event.target.getBoundingClientRect();
+        
+        menu.style.left = `${rect.left}px`;
+        menu.style.top = `${rect.bottom + 8}px`;
+        
+        if (currentView === 'trash') {
+            menu.innerHTML = `
+                <button class="context-menu-item restore" onclick='restoreItem(${JSON.stringify(item)})'>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 4v6h6M23 20v-6h-6"/>
+                        <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                    </svg>
+                    Restaurar
+                </button>
+                <button class="context-menu-item danger" onclick='permanentDelete(${JSON.stringify(item)})'>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                    Eliminar Definitivo
+                </button>
+            `;
+        } else {
+            menu.innerHTML = `
+                <button class="context-menu-item" onclick='renameItem(${JSON.stringify(item)})'>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    Renombrar
+                </button>
+                ${item.type === 'image' ? `
+                    <button class="context-menu-item" onclick='downloadImage(${JSON.stringify(item)})'>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                        </svg>
+                        Descargar
+                    </button>
+                ` : ''}
+                <button class="context-menu-item danger" onclick='moveToTrash(${JSON.stringify(item)})'>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                    Eliminar
+                </button>
+            `;
         }
+        
+        menu.classList.add('visible');
+        
+        setTimeout(() => {
+            document.addEventListener('click', closeContextMenu);
+        }, 10);
+    }
 
-        async function renameItem(item) {
-            closeContextMenu();
-            const newName = prompt("Nuevo nombre:", item.name);
-            if (!newName?.trim() || newName === item.name) return;
+    function closeContextMenu() {
+        const menu = document.getElementById('contextMenu');
+        menu.classList.remove('visible');
+        document.removeEventListener('click', closeContextMenu);
+    }
 
-            const { error } = await supabaseClient
-                .from('gallery_items')
-                .update({ name: newName.trim() })
-                .eq('id', item.id);
+    async function renameItem(item) {
+        closeContextMenu();
+        const newName = prompt("Nuevo nombre:", item.name);
+        if (!newName?.trim() || newName === item.name) return;
 
-            if (error) {
-                console.error("Error renombrando:", error);
-                alert("Error al renombrar");
-            }
+        const { error } = await supabaseClient
+            .from('gallery_items')
+            .update({ name: newName.trim() })
+            .eq('id', item.id);
+
+        if (error) {
+            console.error("Error renombrando:", error);
+            alert("Error al renombrar");
         }
+    }
 
-        async function moveToTrash(item) {
-            closeContextMenu();
-            const { error } = await supabaseClient
-                .from('gallery_items')
-                .update({ is_deleted: true })
-                .eq('id', item.id);
+    async function moveToTrash(item) {
+        closeContextMenu();
+        const { error } = await supabaseClient
+            .from('gallery_items')
+            .update({ is_deleted: true })
+            .eq('id', item.id);
 
-            if (error) {
-                console.error("Error moviendo a papelera:", error);
-                alert("Error al eliminar");
-            }
+        if (error) {
+            console.error("Error moviendo a papelera:", error);
+            alert("Error al eliminar");
         }
+    }
 
-        async function restoreItem(item) {
-            closeContextMenu();
-            const { error } = await supabaseClient
-                .from('gallery_items')
-                .update({ is_deleted: false })
-                .eq('id', item.id);
+    async function restoreItem(item) {
+        closeContextMenu();
+        const { error } = await supabaseClient
+            .from('gallery_items')
+            .update({ is_deleted: false })
+            .eq('id', item.id);
 
-            if (error) {
-                console.error("Error restaurando:", error);
-                alert("Error al restaurar");
-            }
+        if (error) {
+            console.error("Error restaurando:", error);
+            alert("Error al restaurar");
         }
+    }
 
-        async function permanentDelete(item) {
-            closeContextMenu();
-            const confirmDelete = confirm(
-                `¿Eliminar definitivamente "${item.name}"? Esta acción no se puede deshacer.`
-            );
-            if (!confirmDelete) return;
+    async function permanentDelete(item) {
+        closeContextMenu();
+        const confirmDelete = confirm(
+            `¿Eliminar definitivamente "${item.name}"? Esta acción no se puede deshacer.`
+        );
+        if (!confirmDelete) return;
 
-            try {
-                if (item.type === 'image' && item.storage_path) {
-                    const { error: storageError } = await supabaseClient.storage
-                        .from('photos')
-                        .remove([item.storage_path]);
-
-                    if (storageError) console.error("Error eliminando archivo:", storageError);
-                }
-
-                const { error: dbError } = await supabaseClient
-                    .from('gallery_items')
-                    .delete()
-                    .eq('id', item.id);
-
-                if (dbError) throw dbError;
-            } catch (error) {
-                console.error("Error eliminando permanentemente:", error);
-                alert("Error al eliminar");
-            }
-        }
-
-        async function downloadImage(item) {
-            closeContextMenu();
-            if (!item.storage_path) return;
-
-            try {
-                const { data, error } = await supabaseClient.storage
+        try {
+            if (item.type === 'image' && item.storage_path) {
+                const { error: storageError } = await supabaseClient.storage
                     .from('photos')
-                    .download(item.storage_path);
+                    .remove([item.storage_path]);
 
-                if (error) throw error;
-
-                const url = URL.createObjectURL(data);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = item.name;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-            } catch (error) {
-                console.error("Error descargando:", error);
-                alert("Error al descargar la imagen");
+                if (storageError) console.error("Error eliminando archivo:", storageError);
             }
-        }
 
-        function showPreview(item) {
-            currentPreviewItem = item;
-            document.getElementById('previewImage').src = item.imageUrl;
-            document.getElementById('previewTitle').textContent = item.name;
-            document.getElementById('previewModal').classList.add('visible');
-        }
+            const { error: dbError } = await supabaseClient
+                .from('gallery_items')
+                .delete()
+                .eq('id', item.id);
 
-        function closePreview() {
-            document.getElementById('previewModal').classList.remove('visible');
-            currentPreviewItem = null;
+            if (dbError) throw dbError;
+        } catch (error) {
+            console.error("Error eliminando permanentemente:", error);
+            alert("Error al eliminar");
         }
+    }
 
-        function downloadCurrentImage() {
-            if (currentPreviewItem) {
-                downloadImage(currentPreviewItem);
+    async function downloadImage(item) {
+        closeContextMenu();
+        if (!item.storage_path) return;
+
+        try {
+            const { data, error } = await supabaseClient.storage
+                .from('photos')
+                .download(item.storage_path);
+
+            if (error) throw error;
+
+            const url = URL.createObjectURL(data);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = item.name;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Error descargando:", error);
+            alert("Error al descargar la imagen");
+        }
+    }
+
+    function showPreview(item) {
+        currentPreviewItem = item;
+        document.getElementById('previewImage').src = item.imageUrl;
+        document.getElementById('previewTitle').textContent = item.name;
+        document.getElementById('previewModal').classList.add('visible');
+    }
+
+    function closePreview() {
+        document.getElementById('previewModal').classList.remove('visible');
+        currentPreviewItem = null;
+    }
+
+    function downloadCurrentImage() {
+        if (currentPreviewItem) {
+            downloadImage(currentPreviewItem);
+        }
+    }
+
+    function deleteCurrentImage() {
+        if (currentPreviewItem) {
+            moveToTrash(currentPreviewItem);
+            closePreview();
+        }
+    }
+
+    function toggleUserMenu(event) {
+        event.stopPropagation();
+        const menu = document.getElementById('userMenu');
+        const isVisible = menu.classList.contains('visible');
+        
+        closeContextMenu();
+        
+        if (!isVisible) {
+            menu.classList.add('visible');
+            setTimeout(() => {
+                document.addEventListener('click', closeUserMenu);
+            }, 10);
+        } else {
+            closeUserMenu();
+        }
+    }
+
+    function closeUserMenu() {
+        const menu = document.getElementById('userMenu');
+        menu.classList.remove('visible');
+        document.removeEventListener('click', closeUserMenu);
+    }
+
+    function confirmDeleteAccount() {
+        closeUserMenu();
+        
+        const confirmation = prompt(
+            '⚠️ ADVERTENCIA: Esta acción es PERMANENTE e IRREVERSIBLE.\n\n' +
+            'Se eliminarán:\n' +
+            '• Tu cuenta\n' +
+            '• Todas tus carpetas\n' +
+            '• Todas tus fotos\n' +
+            '• Todos tus datos\n\n' +
+            'Para confirmar, escribe exactamente: ELIMINAR CUENTA'
+        );
+        
+        if (confirmation === 'ELIMINAR CUENTA') {
+            deleteAccount();
+        } else if (confirmation !== null) {
+            alert('❌ Texto incorrecto. La cuenta NO ha sido eliminada.\n\nDebe escribir exactamente: ELIMINAR CUENTA');
+        }
+    }
+
+    async function deleteAccount() {
+        if (!user) return;
+        
+        const overlay = document.getElementById('uploadOverlay');
+        const overlayText = overlay.querySelector('p');
+        const originalText = overlayText.textContent;
+        
+        overlay.classList.add('visible');
+        overlayText.textContent = 'Eliminando cuenta y datos...';
+        
+        try {
+            const { data: userItems, error: itemsError } = await supabaseClient
+                .from('gallery_items')
+                .select('*')
+                .eq('user_id', user.id);
+            
+            if (itemsError) throw itemsError;
+            
+            const imagesToDelete = userItems
+                .filter(item => item.type === 'image' && item.storage_path)
+                .map(item => item.storage_path);
+            
+            if (imagesToDelete.length > 0) {
+                overlayText.textContent = `Eliminando ${imagesToDelete.length} imagen(es) del almacenamiento...`;
+                
+                const { error: storageError } = await supabaseClient.storage
+                    .from('photos')
+                    .remove(imagesToDelete);
+                
+                if (storageError) {
+                    console.error('Error eliminando archivos del storage:', storageError);
+                }
             }
+            
+            overlayText.textContent = 'Eliminando registros de base de datos...';
+            
+            const { error: dbError } = await supabaseClient
+                .from('gallery_items')
+                .delete()
+                .eq('user_id', user.id);
+            
+            if (dbError) throw dbError;
+            
+            overlayText.textContent = 'Cerrando sesión...';
+            await supabaseClient.auth.signOut();
+            
+            overlay.classList.remove('visible');
+            overlayText.textContent = originalText;
+            
+            alert(
+                '✅ Cuenta eliminada exitosamente\n\n' +
+                'Se han eliminado:\n' +
+                `• ${imagesToDelete.length} imagen(es)\n` +
+                `• ${userItems.length} elemento(s) en total\n` +
+                '• Todos tus datos de la base de datos\n\n' +
+                'Gracias por usar AxeltechCloud.'
+            );
+            
+            window.location.reload();
+            
+        } catch (error) {
+            overlay.classList.remove('visible');
+            overlayText.textContent = originalText;
+            console.error('Error eliminando cuenta:', error);
+            alert(
+                '❌ Error al eliminar la cuenta\n\n' +
+                'Detalles: ' + error.message + '\n\n' +
+                'Por favor, intenta nuevamente o contacta a soporte si el problema persiste.'
+            );
         }
+    }
 
-        function deleteCurrentImage() {
-            if (currentPreviewItem) {
-                moveToTrash(currentPreviewItem);
-                closePreview();
-            }
-        }
-
-        init();
-    </script>
+    init();
+</script>
+    
 </body>
 </html>
+
 
 
 
