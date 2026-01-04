@@ -741,15 +741,14 @@ async function handleLogout() {
 }
         
         
-     async function init() {
+   async function init() {
     try {
-        // 1. Detectar tokens de Supabase en la URL (#access_token=...)
+        // 1. Detectar tokens de Supabase en la URL
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const accessToken = hashParams.get('access_token');
         const type = hashParams.get('type'); 
 
         if (accessToken) {
-            // Limpiamos la URL inmediatamente para evitar errores 404
             window.history.replaceState({}, document.title, window.location.pathname);
 
             if (type === 'recovery') {
@@ -757,14 +756,14 @@ async function handleLogout() {
                 if (newPassword) {
                     const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
                     if (error) alert("Error al actualizar: " + error.message);
-                    else alert("¡Contraseña actualizada! Ya puedes iniciar sesión con tu nueva clave.");
+                    else alert("¡Contraseña actualizada! Ya puedes iniciar sesión.");
                 }
-                window.location.reload(); 
+                window.location.reload();
                 return;
             }
         }
 
-        // 2. Verificar si existe una sesión activa
+        // 2. Verificar sesión
         const { data: { session } } = await supabaseClient.auth.getSession();
         
         if (!session) {
@@ -774,7 +773,7 @@ async function handleLogout() {
             return;
         }
 
-        // 3. Si hay sesión, configurar usuario y cargar galería
+        // 3. Configurar usuario y cargar app
         user = session.user;
         document.getElementById('userAvatar').textContent = user.email.substring(0, 2).toUpperCase();
         
@@ -785,9 +784,11 @@ async function handleLogout() {
         document.getElementById('authScreen').classList.add('hidden');
         document.getElementById('app').classList.remove('hidden');
 
-        // 4. Mensaje de bienvenida tras confirmar registro
+        // 4. Mensaje de bienvenida si acaba de confirmar registro
         if (type === 'signup') {
-            setTimeout(() => alert('¡Bienvenido! Tu cuenta ha sido confirmada con éxito.'), 500);
+            setTimeout(() => {
+                alert('¡Bienvenido! Tu cuenta ha sido confirmada exitosamente.');
+            }, 500);
         }
 
     } catch (err) {
@@ -1270,6 +1271,7 @@ async function handleLogout() {
     </script>
 </body>
 </html>
+
 
 
 
