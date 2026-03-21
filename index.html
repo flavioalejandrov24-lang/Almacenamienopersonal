@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhotoCloud - Tu Galería Personal</title>
+    <title>AxeltechCloud</title>
     <script src="config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="manifest" href="manifest.json">
@@ -12,14 +12,16 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: radial-gradient(circle at top right, #f1f5f9, #e2e8f0);
             background-attachment: fixed;
             color: #1e293b;
             min-height: 100vh;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
-        /* ── HEADER ── */
+        /* ══ HEADER ══ */
         .header {
             position: fixed; top: 0; left: 0; right: 0;
             height: 64px; background: #2563eb;
@@ -34,10 +36,10 @@
 
         .btn { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 9999px; border: none; cursor: pointer; font-weight: 500; transition: all 0.2s; font-size: 14px; }
         .btn-trash { background: transparent; color: rgba(255,255,255,0.9); }
-        .btn-trash:hover { background: rgba(255,255,255,0.1); color: white; }
+        .btn-trash:hover { background: rgba(255,255,255,0.1); }
         .btn-trash.active { background: #fee2e2; color: #dc2626; }
 
-        /* ── FIX 3: USER SUBMENU ── */
+        /* ── USER SUBMENU ── */
         .user-menu-container { position: relative; }
         .user-avatar {
             width: 36px; height: 36px; border-radius: 50%;
@@ -54,1119 +56,1181 @@
             padding: 8px; min-width: 220px; z-index: 9999; display: none;
         }
         .user-submenu.visible { display: block; }
-        .user-submenu-header {
-            padding: 10px 14px 12px;
-            border-bottom: 1px solid #f1f5f9; margin-bottom: 4px;
-        }
+        .user-submenu-header { padding: 10px 14px 12px; border-bottom: 1px solid #f1f5f9; margin-bottom: 4px; }
         .user-submenu-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
         .user-submenu-email { font-size: 13px; color: #334155; font-weight: 600; word-break: break-all; }
-        .user-submenu-item {
-            display: flex; align-items: center; gap: 10px;
-            padding: 10px 14px; border: none; background: none;
-            width: 100%; text-align: left; cursor: pointer;
-            font-size: 14px; font-weight: 500; color: #dc2626; border-radius: 8px;
-            transition: background 0.15s;
-        }
+        .user-submenu-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: none; background: none; width: 100%; text-align: left; cursor: pointer; font-size: 14px; font-weight: 500; color: #dc2626; border-radius: 8px; transition: background 0.15s; }
         .user-submenu-item:hover { background: #fef2f2; }
 
-        /* ── MAIN LAYOUT ── */
-        .main { padding: 96px 32px 80px; max-width: 1280px; margin: 0 auto; }
-        .breadcrumbs-section { margin-bottom: 32px; }
-        .breadcrumbs-container { display: flex; flex-direction: column; gap: 16px; }
-        .breadcrumbs { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        /* ══ MAIN ══ */
+        .main { padding: 96px 16px 120px; max-width: 1280px; margin: 0 auto; }
+        @media (min-width: 640px) { .main { padding: 96px 32px 120px; } }
+
+        .breadcrumbs-section { margin-bottom: 20px; }
+        .breadcrumbs-container { display: flex; flex-direction: column; gap: 14px; }
+        .breadcrumbs { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
         .breadcrumb { color: #64748b; cursor: pointer; background: none; border: none; font-size: 14px; }
         .breadcrumb:hover { color: #2563eb; }
-        .breadcrumb-current { color: #dc2626; font-weight: 500; }
+        .breadcrumb-current { color: #dc2626; font-weight: 500; font-size: 14px; }
         .actions-bar { display: flex; gap: 8px; flex-wrap: wrap; }
 
-        .btn-primary { background: white; color: #475569; border: 1px solid #e2e8f0; }
-        .btn-primary:hover { box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .btn-upload { background: #2563eb; color: white; box-shadow: 0 4px 6px rgba(37,99,235,0.2); }
-        .btn-upload:hover { background: #1d4ed8; }
-        .btn-secondary { background: #64748b; color: white; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 500; }
-
-        /* ── GRID ── */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
-        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 96px 0; border: 2px dashed #e2e8f0; border-radius: 24px; color: #cbd5e1; }
-        .empty-title { font-size: 18px; font-weight: 500; margin-bottom: 4px; }
-        .empty-text { font-size: 14px; }
-
-        /* ── ITEM CARD ── */
-        .item-card {
-            background: white; border-radius: 16px; border: 1px solid #e2e8f0;
-            overflow: hidden; transition: all 0.2s; cursor: pointer;
-            position: relative; /* needed for select-toggle */
+        /* FIX 2: Nueva Carpeta — azul carpeta */
+        .btn-nueva-carpeta {
+            display: flex; align-items: center; gap: 8px;
+            padding: 9px 18px; border-radius: 9999px;
+            background: #dbeafe; color: #1d4ed8;
+            border: 1.5px solid #bfdbfe;
+            font-weight: 600; font-size: 14px;
+            cursor: pointer; transition: background 0.2s;
         }
-        .item-card:hover { box-shadow: 0 10px 25px rgba(0,0,0,0.1); transform: translateY(-4px); }
-        .item-preview { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: #f1f5f9; overflow: hidden; position: relative; }
+        .btn-nueva-carpeta:hover { background: #bfdbfe; }
+
+        .btn-upload {
+            display: flex; align-items: center; gap: 8px;
+            padding: 9px 18px; border-radius: 9999px;
+            background: #2563eb; color: white;
+            border: none; font-weight: 600; font-size: 14px;
+            cursor: pointer; box-shadow: 0 4px 10px rgba(37,99,235,0.3);
+            transition: background 0.2s;
+        }
+        .btn-upload:hover { background: #1d4ed8; }
+
+        /* ══ GRID ══ */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 14px; }
+        @media (min-width: 640px) { .grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; } }
+
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 0; border: 2px dashed #e2e8f0; border-radius: 24px; color: #94a3b8; }
+        .empty-title { font-size: 17px; font-weight: 500; margin-bottom: 6px; }
+        .empty-text { font-size: 13px; }
+
+        /* ══ ITEM CARD ══ */
+        .item-card {
+            background: white; border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer; position: relative; overflow: visible;
+        }
+        .item-card:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.1); transform: translateY(-3px); }
+        .item-card.is-dragging { opacity: 0.35; transform: scale(0.96); }
+
+        /* Drop target */
+        .item-card.drag-over {
+            box-shadow: 0 0 0 3px #2563eb, 0 8px 24px rgba(37,99,235,0.25) !important;
+            transform: scale(1.04) !important;
+        }
+        .item-card.drag-over .item-preview { background: #dbeafe; }
+
+        .item-preview {
+            aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+            background: #f1f5f9; overflow: hidden; border-radius: 16px 16px 0 0; position: relative;
+        }
         .item-preview img { width: 100%; height: 100%; object-fit: cover; }
         .folder-icon { width: 60px; height: 60px; color: #3b82f6; fill: #dbeafe; }
-        .item-info { padding: 12px; }
-        .item-header { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px; }
-        .item-name { font-size: 14px; font-weight: 500; color: #334155; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
-        .item-menu-btn { padding: 4px; background: none; border: none; cursor: pointer; color: #cbd5e1; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+        .item-info { padding: 10px 12px 12px; border-radius: 0 0 16px 16px; }
+        .item-header { display: flex; align-items: center; gap: 5px; }
+        .item-name { font-size: 13px; font-weight: 500; color: #334155; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+
+        /* Lápiz renombrar */
+        .btn-rename { background: none; border: none; cursor: pointer; color: #3b82f6; padding: 3px 4px; border-radius: 5px; display: flex; align-items: center; flex-shrink: 0; transition: background 0.15s; }
+        .btn-rename:hover { background: #eff6ff; }
+
+        /* Restaurar en papelera */
+        .btn-restore-item { font-size: 11px; font-weight: 600; color: #2563eb; background: #eff6ff; border: none; border-radius: 6px; padding: 3px 8px; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: background 0.15s; }
+        .btn-restore-item:hover { background: #dbeafe; }
+
+        /* Menú ⋮ (solo papelera) */
+        .item-menu-btn { padding: 4px 6px; background: none; border: none; cursor: pointer; color: #cbd5e1; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; }
         .item-menu-btn:hover { background: #f1f5f9; color: #94a3b8; }
 
-        /* ── FIX 2: RENAME PENCIL BUTTON ── */
-        .btn-rename {
-            background: none; border: none; cursor: pointer;
-            color: #3b82f6; padding: 4px 5px; border-radius: 6px;
-            display: flex; align-items: center; flex-shrink: 0;
-            transition: background 0.15s, color 0.15s;
-        }
-        .btn-rename:hover { background: #eff6ff; color: #1d4ed8; }
-
-        /* ── FIX 4: SELECT TOGGLE (replaces Seleccionar button) ── */
+        /* FIX 1: SELECT TOGGLE — invisible por defecto, aparece en hover (desktop) y siempre en selection mode */
         .select-toggle {
             position: absolute; top: 8px; left: 8px;
             width: 24px; height: 24px; border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.9);
-            background: rgba(0,0,0,0.25);
+            border: 2.5px solid white;
+            background: rgba(0,0,0,0.3);
             cursor: pointer; z-index: 20;
-            opacity: 0; transition: opacity 0.2s, background 0.2s, border-color 0.2s;
             display: flex; align-items: center; justify-content: center;
-            pointer-events: all;
+            opacity: 0;
+            transition: opacity 0.18s, background 0.15s;
         }
-        .item-card:hover .select-toggle { opacity: 1; }
+        .item-card:hover .select-toggle { opacity: 0.85; }
         .selection-mode .item-card .select-toggle { opacity: 1; }
-        .select-toggle.selected { background: #2563eb; border-color: #2563eb; opacity: 1; }
+        .select-toggle.selected { background: #2563eb; border-color: #2563eb; opacity: 1 !important; }
         .select-toggle.selected::after { content: '✓'; color: white; font-size: 12px; font-weight: bold; }
 
-        /* ── CONTEXT MENU ── */
-        .context-menu { position: absolute; background: white; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); padding: 8px; min-width: 160px; z-index: 1000; display: none; }
+        /* ══ CONTEXT MENU ══ */
+        .context-menu { position: fixed; background: white; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); padding: 8px; min-width: 200px; z-index: 1000; display: none; }
         .context-menu.visible { display: block; }
-        .context-menu-item { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border: none; background: none; width: 100%; text-align: left; cursor: pointer; font-size: 14px; color: #475569; border-radius: 6px; }
+        .context-menu-item { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border: none; background: none; width: 100%; text-align: left; cursor: pointer; font-size: 14px; color: #475569; border-radius: 6px; }
         .context-menu-item:hover { background: #f1f5f9; }
         .context-menu-item.danger { color: #dc2626; }
         .context-menu-item.danger:hover { background: #fef2f2; }
         .context-menu-item.restore { color: #2563eb; }
         .context-menu-item.restore:hover { background: #eff6ff; }
 
-        /* ── MODALS ── */
+        /* ══ MODALS ══ */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 200; display: none; align-items: center; justify-content: center; padding: 16px; }
         .modal.visible { display: flex; }
-        .modal-close { position: absolute; top: 24px; right: 24px; background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 32px; line-height: 1; transition: color 0.2s; }
+        .modal-close { position: absolute; top: 24px; right: 24px; background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 32px; line-height: 1; }
         .modal-close:hover { color: white; }
         .modal-content { max-width: 1024px; width: 100%; display: flex; flex-direction: column; align-items: center; }
         .modal-image { max-height: 80vh; border-radius: 8px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); object-fit: contain; }
-        .modal-info { margin-top: 24px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-        .modal-title { color: white; font-size: 20px; font-weight: 500; }
-        .modal-actions { display: flex; gap: 16px; margin-top: 16px; }
-        .btn-modal { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 8px 24px; }
+        .modal-info { margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .modal-title { color: white; font-size: 18px; font-weight: 500; }
+        .modal-actions { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; justify-content: center; }
+        .btn-modal { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.15); padding: 8px 20px; border-radius: 9999px; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
         .btn-modal:hover { background: rgba(255,255,255,0.2); }
         .btn-modal.danger { background: rgba(220,38,38,0.2); border-color: rgba(220,38,38,0.2); color: #fca5a5; }
         .btn-modal.danger:hover { background: rgba(220,38,38,0.4); }
 
-        /* ── UPLOAD OVERLAY ── */
+        /* Custom modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+        .modal-overlay .modal-box { background: white; padding: 24px; border-radius: 16px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 16px 40px rgba(0,0,0,0.2); }
+        .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+
+        /* Upload overlay */
         .upload-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.4); backdrop-filter: blur(4px); z-index: 150; display: none; flex-direction: column; align-items: center; justify-content: center; color: white; }
         .upload-overlay.visible { display: flex; }
         .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .progress-bar { width: 256px; height: 8px; background: rgba(255,255,255,0.2); border-radius: 9999px; overflow: hidden; margin-top: 8px; }
+        .progress-bar { width: 240px; height: 8px; background: rgba(255,255,255,0.2); border-radius: 9999px; overflow: hidden; margin-top: 8px; }
         .progress-fill { height: 100%; background: #3b82f6; transition: width 0.3s; }
 
-        /* ── LOADING ── */
+        /* Loading */
         .loading-screen { display: flex; align-items: center; justify-content: center; height: 100vh; background: #f8fafc; }
         .loading-spinner { width: 48px; height: 48px; border: 4px solid #e2e8f0; border-top-color: #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; }
         .error-message { background: #fee2e2; color: #dc2626; padding: 16px; border-radius: 8px; margin: 16px; text-align: center; }
 
-        /* ── FIX 5: SELECTION BAR — sin texto, botones centrados y visibles ── */
+        /* Password toggle */
+        .password-wrapper { position: relative; display: flex; align-items: center; }
+        .password-wrapper input { width: 100%; padding: 12px 44px 12px 12px; border-radius: 8px; border: 1px solid #e2e8f0; outline: none; font-size: 14px; font-family: inherit; }
+        .password-wrapper input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .toggle-password { position: absolute; right: 10px; background: none; border: none; cursor: pointer; color: #94a3b8; padding: 4px; display: flex; align-items: center; }
+        .toggle-password:hover { color: #475569; }
+
+        /* FIX 3: SELECTION BAR — 3 botones con degradados, sin texto de conteo */
         .selection-bar {
             position: fixed; bottom: 0; left: 0; right: 0;
             background: white; border-top: 1px solid #e2e8f0;
-            padding: 14px 16px;
-            display: none; align-items: center; justify-content: center;
-            gap: 10px; flex-wrap: wrap;
-            box-shadow: 0 -4px 12px rgba(0,0,0,0.1); z-index: 150;
+            padding: 10px 12px;
+            display: none; align-items: stretch; justify-content: center;
+            gap: 8px;
+            box-shadow: 0 -4px 16px rgba(0,0,0,0.08); z-index: 150;
         }
         .selection-bar.visible { display: flex; }
 
-        /* Botón Cancelar */
-        .btn-sel-cancel {
-            background: #f1f5f9; color: #475569;
-            border: 1px solid #e2e8f0; padding: 10px 18px;
-            border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 14px;
-            display: flex; align-items: center; gap: 6px; transition: background 0.15s;
+        .btn-sel {
+            flex: 1; max-width: 130px;
+            padding: 11px 6px; border-radius: 12px;
+            border: none; cursor: pointer;
+            font-weight: 700; font-size: 12px;
+            display: flex; align-items: center; justify-content: center; gap: 5px;
+            color: white; transition: filter 0.15s, opacity 0.15s;
+            white-space: nowrap;
         }
-        .btn-sel-cancel:hover { background: #e2e8f0; }
+        .btn-sel:hover { filter: brightness(1.08); }
+        .btn-sel:active { opacity: 0.82; }
 
-        /* Botones de acción */
-        .btn-sel-action {
-            padding: 10px 18px; border-radius: 8px; border: none;
-            cursor: pointer; font-weight: 500; font-size: 14px;
-            display: flex; align-items: center; gap: 6px;
-            color: white; background: #475569; transition: opacity 0.15s;
+        /* Amarillo degradado */
+        .btn-sel-rename {
+            background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%);
+            box-shadow: 0 4px 14px rgba(217,119,6,0.35);
         }
-        .btn-sel-action:hover { opacity: 0.88; }
-        .btn-sel-action.danger { background: #dc2626; }
-        .btn-sel-action.danger:hover { background: #b91c1c; }
-
-        /* ── CUSTOM MODAL ── */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-        .modal-overlay .modal-box { background: white; padding: 24px; border-radius: 14px; width: 90%; max-width: 400px; text-align: center; }
-        .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
-
-        /* ── FIX 1: PASSWORD TOGGLE ── */
-        .password-wrapper { position: relative; display: flex; align-items: center; }
-        .password-wrapper input {
-            width: 100%; padding: 12px 44px 12px 12px;
-            border-radius: 8px; border: 1px solid #e2e8f0; outline: none;
-            font-size: 14px; font-family: inherit;
+        /* Verde degradado */
+        .btn-sel-download {
+            background: linear-gradient(135deg, #047857 0%, #34d399 100%);
+            box-shadow: 0 4px 14px rgba(4,120,87,0.35);
         }
-        .password-wrapper input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
-        .toggle-password {
-            position: absolute; right: 10px;
-            background: none; border: none; cursor: pointer;
-            color: #94a3b8; padding: 4px;
+        /* Azul degradado (restaurar) */
+        .btn-sel-restore {
+            background: linear-gradient(135deg, #1d4ed8 0%, #60a5fa 100%);
+            box-shadow: 0 4px 14px rgba(29,78,216,0.35);
+        }
+        /* Rojo degradado */
+        .btn-sel-delete {
+            background: linear-gradient(135deg, #b91c1c 0%, #f87171 100%);
+            box-shadow: 0 4px 14px rgba(185,28,28,0.35);
+        }
+
+        /* DRAG GHOST */
+        .ghost-drag {
+            position: fixed; width: 96px; height: 96px;
+            border-radius: 14px; background: white;
+            box-shadow: 0 14px 40px rgba(0,0,0,0.35);
             display: flex; align-items: center; justify-content: center;
-            transition: color 0.15s;
+            overflow: hidden; pointer-events: none; z-index: 9999;
+            opacity: 0.88; transform: rotate(5deg) scale(1.07);
         }
-        .toggle-password:hover { color: #475569; }
-
-        /* ── RESPONSIVE ── */
-        @media (max-width: 768px) {
-            .main { padding: 80px 16px 80px; }
-            .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
-            /* En móvil mostrar el toggle levemente para que sea discoverable */
-            .select-toggle { opacity: 0.45; }
-        }
+        .ghost-drag img { width: 100%; height: 100%; object-fit: cover; }
 
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <!-- PANTALLA DE CARGA -->
-    <div id="loadingScreen" class="loading-screen">
-        <div class="loading-spinner"></div>
-    </div>
+<!-- CARGA -->
+<div id="loadingScreen" class="loading-screen">
+    <div class="loading-spinner"></div>
+</div>
 
-    <!-- MODAL PERSONALIZADO -->
-    <div id="customModal" class="modal-overlay hidden">
-        <div class="modal-box">
-            <h3 id="modalTitle" style="margin-bottom: 8px; color: #1e293b; font-size: 18px;">Título</h3>
-            <p id="modalMessage" style="color: #64748b; font-size: 14px; white-space: pre-line;">Mensaje aquí...</p>
-            <div id="modalInputContainer" class="hidden" style="margin-top: 12px;">
-                <input id="modalInput" placeholder="Escribe aquí..."
-                       style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px; font-size:14px; outline:none; font-family:inherit;">
-            </div>
-            <div class="modal-buttons">
-                <button id="modalCancelBtn" class="btn btn-primary hidden">Cancelar</button>
-                <button id="modalConfirmBtn" class="btn btn-upload">Aceptar</button>
-            </div>
+<!-- MODAL PERSONALIZADO -->
+<div id="customModal" class="modal-overlay hidden">
+    <div class="modal-box">
+        <h3 id="modalTitle" style="margin-bottom:8px;color:#1e293b;font-size:17px;"></h3>
+        <p id="modalMessage" style="color:#64748b;font-size:14px;white-space:pre-line;"></p>
+        <div id="modalInputContainer" class="hidden" style="margin-top:12px;">
+            <input id="modalInput" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none;font-family:inherit;">
         </div>
-    </div>
-
-    <!-- PANTALLA DE AUTH -->
-    <div id="authScreen" class="hidden">
-        <div style="max-width:400px; margin:100px auto; padding:32px; background:white; border-radius:24px; box-shadow:0 10px 25px rgba(0,0,0,0.07); text-align:center;">
-            <h2 id="authTitle" style="margin-bottom:24px; color:#1e293b;">Iniciar Sesión</h2>
-            <div style="display:flex; flex-direction:column; gap:16px;">
-
-                <input type="email" id="authEmail" placeholder="Tu correo electrónico"
-                       style="padding:12px; border-radius:8px; border:1px solid #e2e8f0; outline:none; font-size:14px; font-family:inherit;">
-
-                <!-- FIX 1: Input de contraseña con ojito -->
-                <div class="password-wrapper">
-                    <input type="password" id="authPassword" placeholder="Contraseña">
-                    <button type="button" id="togglePasswordBtn" class="toggle-password" title="Mostrar / ocultar contraseña">
-                        <!-- Ojo abierto (estado inicial: contraseña oculta) -->
-                        <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                            <circle cx="12" cy="12" r="3"/>
-                        </svg>
-                    </button>
-                </div>
-
-                <button class="btn btn-upload" id="mainAuthBtn" style="justify-content:center; width:100%;">Entrar</button>
-
-                <div style="margin-top:8px; font-size:14px; color:#64748b;">
-                    <p id="toggleAuthText">¿No tienes cuenta? <a href="#" id="toggleAuthLink" style="color:#2563eb; text-decoration:none; font-weight:500;">Regístrate</a></p>
-                    <p style="margin-top:8px;"><a href="#" id="resetPasswordLink" style="color:#94a3b8; text-decoration:none; font-size:12px;">Olvidé mi contraseña</a></p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- APP PRINCIPAL -->
-    <div id="app" class="hidden">
-        <nav class="header">
-            <div class="logo" id="logoBtn">
-                <div class="logo-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="6" width="20" height="12" rx="2"/>
-                        <path d="M6 6V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/>
-                    </svg>
-                </div>
-                <h1 class="logo-text">AxeltechCloud</h1>
-            </div>
-
-            <div class="header-actions">
-                <button class="btn btn-trash" id="trashBtn">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                    </svg>
-                </button>
-
-                <!-- FIX 3: Menú de usuario con submenú -->
-                <div class="user-menu-container">
-                    <div class="user-avatar" id="userAvatar" title="Mi cuenta"></div>
-                    <div class="user-submenu" id="userSubmenu">
-                        <div class="user-submenu-header">
-                            <div class="user-submenu-label">Sesión activa</div>
-                            <div class="user-submenu-email" id="userEmailDisplay">usuario@email.com</div>
-                        </div>
-                        <button class="user-submenu-item" id="logoutBtn">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                                <polyline points="16 17 21 12 16 7"/>
-                                <line x1="21" y1="12" x2="9" y2="12"/>
-                            </svg>
-                            Cerrar sesión
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </nav>
-
-        <main class="main">
-            <div class="breadcrumbs-section">
-                <div class="breadcrumbs-container">
-                    <div class="breadcrumbs" id="breadcrumbs"></div>
-                    <div class="actions-bar" id="actionsBar">
-                        <!-- FIX 4: Botón "Seleccionar" ELIMINADO -->
-                        <button class="btn btn-primary" id="createFolderBtn">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="12" y1="5" x2="12" y2="19"/>
-                                <line x1="5" y1="12" x2="19" y2="12"/>
-                            </svg>
-                            Nueva Carpeta
-                        </button>
-                        <label class="btn btn-upload">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-                            </svg>
-                            Subir Foto
-                            <input type="file" id="fileInput" accept="image/*" multiple style="display:none;">
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <div id="contentArea"></div>
-        </main>
-
-        <div class="context-menu" id="contextMenu"></div>
-
-        <!-- MODAL VISTA PREVIA -->
-        <div class="modal" id="previewModal">
-            <button class="modal-close" id="closePreviewBtn">×</button>
-            <div class="modal-content">
-                <img id="previewImage" class="modal-image" alt="">
-                <div class="modal-info">
-                    <h2 class="modal-title" id="previewTitle"></h2>
-                    <div class="modal-actions">
-                        <button class="btn btn-modal" id="downloadBtn">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-                            </svg>
-                            Descargar
-                        </button>
-                        <button class="btn btn-modal danger" id="deleteImageBtn">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                            </svg>
-                            Eliminar
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- FIX 5: BARRA DE SELECCIÓN — sin texto, botones centrados y todos visibles -->
-        <div class="selection-bar" id="selectionBar">
-            <button class="btn-sel-cancel" id="cancelSelectionBtn">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
+        <div class="modal-buttons">
+            <button id="modalCancelBtn" class="hidden"
+                style="padding:10px 20px;border-radius:8px;border:1px solid #e2e8f0;background:#f8fafc;color:#475569;font-size:14px;cursor:pointer;font-weight:500;">
                 Cancelar
             </button>
-            <button class="btn-sel-action" id="downloadSelectedBtn">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-                </svg>
-                Descargar
-            </button>
-            <button class="btn-sel-action" id="moveSelectedBtn">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
-                    <polyline points="13 2 13 9 20 9"/>
-                </svg>
-                Mover
-            </button>
-            <button class="btn-sel-action danger" id="deleteSelectedBtn">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                </svg>
-                Eliminar
+            <button id="modalConfirmBtn"
+                style="padding:10px 24px;border-radius:8px;border:none;background:#2563eb;color:white;font-size:14px;cursor:pointer;font-weight:600;">
+                Aceptar
             </button>
         </div>
+    </div>
+</div>
 
-        <!-- OVERLAY DE SUBIDA -->
-        <div class="upload-overlay" id="uploadOverlay">
-            <div class="spinner"></div>
-            <p style="font-weight:500; margin-bottom:8px;">Subiendo archivos...</p>
-            <p id="uploadStatus" style="font-size:14px; color:rgba(255,255,255,0.8); margin-bottom:8px;">0 de 0</p>
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill"></div>
+<!-- AUTH -->
+<div id="authScreen" class="hidden">
+    <div style="max-width:400px;margin:100px auto;padding:32px;background:white;border-radius:24px;box-shadow:0 10px 25px rgba(0,0,0,0.07);text-align:center;">
+        <h2 id="authTitle" style="margin-bottom:24px;color:#1e293b;">Iniciar Sesión</h2>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+            <input type="email" id="authEmail" placeholder="Tu correo electrónico"
+                   style="padding:12px;border-radius:8px;border:1px solid #e2e8f0;outline:none;font-size:14px;font-family:inherit;">
+            <div class="password-wrapper">
+                <input type="password" id="authPassword" placeholder="Contraseña">
+                <button type="button" id="togglePasswordBtn" class="toggle-password">
+                    <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                </button>
+            </div>
+            <button class="btn-upload" id="mainAuthBtn" style="justify-content:center;">Entrar</button>
+            <div style="font-size:14px;color:#64748b;">
+                <p id="toggleAuthText">¿No tienes cuenta?
+                    <a href="#" id="toggleAuthLink" style="color:#2563eb;text-decoration:none;font-weight:500;">Regístrate</a>
+                </p>
+                <p style="margin-top:8px;">
+                    <a href="#" id="resetPasswordLink" style="color:#94a3b8;text-decoration:none;font-size:12px;">Olvidé mi contraseña</a>
+                </p>
             </div>
         </div>
-    </div><!-- /app -->
+    </div>
+</div>
 
-    <script>
-        // ─── CONFIG ───
-        const SUPABASE_URL      = window.SUPABASE_CONFIG?.url;
-        const SUPABASE_ANON_KEY = window.SUPABASE_CONFIG?.key;
+<!-- APP -->
+<div id="app" class="hidden">
+    <nav class="header">
+        <div class="logo" id="logoBtn">
+            <div class="logo-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="6" width="20" height="12" rx="2"/>
+                    <path d="M6 6V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/>
+                </svg>
+            </div>
+            <h1 class="logo-text">AxeltechCloud</h1>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-trash" id="trashBtn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+            </button>
+            <div class="user-menu-container">
+                <div class="user-avatar" id="userAvatar"></div>
+                <div class="user-submenu" id="userSubmenu">
+                    <div class="user-submenu-header">
+                        <div class="user-submenu-label">Sesión activa</div>
+                        <div class="user-submenu-email" id="userEmailDisplay"></div>
+                    </div>
+                    <button class="user-submenu-item" id="logoutBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                            <polyline points="16 17 21 12 16 7"/>
+                            <line x1="21" y1="12" x2="9" y2="12"/>
+                        </svg>
+                        Cerrar sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-        if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-            document.getElementById('loadingScreen').innerHTML = `
-                <div class="error-message">
-                    <strong>Error de Configuración</strong><br>
-                    No se encontraron las credenciales de Supabase.
-                </div>`;
-            throw new Error('Faltan credenciales de Supabase');
+    <main class="main">
+        <div class="breadcrumbs-section">
+            <div class="breadcrumbs-container">
+                <div class="breadcrumbs" id="breadcrumbs"></div>
+                <div class="actions-bar" id="actionsBar">
+                    <!-- FIX 2: color azul carpeta, sin botón Seleccionar -->
+                    <button class="btn-nueva-carpeta" id="createFolderBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        Nueva Carpeta
+                    </button>
+                    <label class="btn-upload">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                        </svg>
+                        Subir Foto
+                        <input type="file" id="fileInput" accept="image/*" multiple style="display:none;">
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div id="contentArea"></div>
+    </main>
+
+    <!-- Context menu (solo papelera) -->
+    <div class="context-menu" id="contextMenu"></div>
+
+    <!-- Preview modal -->
+    <div class="modal" id="previewModal">
+        <button class="modal-close" id="closePreviewBtn">×</button>
+        <div class="modal-content">
+            <img id="previewImage" class="modal-image" alt="">
+            <div class="modal-info">
+                <h2 class="modal-title" id="previewTitle"></h2>
+                <div class="modal-actions">
+                    <button class="btn-modal" id="downloadBtn">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        Descargar
+                    </button>
+                    <button class="btn-modal danger" id="deleteImageBtn">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FIX 3: Barra de selección — sin texto, 3 botones centrados con degradados -->
+    <div class="selection-bar" id="selectionBar">
+        <!-- Renombrar (amarillo) - solo en vista normal -->
+        <button class="btn-sel btn-sel-rename" id="renameSelectedBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            Renombrar
+        </button>
+        <!-- Descargar (verde) - solo en vista normal -->
+        <button class="btn-sel btn-sel-download" id="downloadSelectedBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+            </svg>
+            Descargar
+        </button>
+        <!-- Restaurar (azul) - solo en papelera -->
+        <button class="btn-sel btn-sel-restore hidden" id="restoreSelectedBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                <path d="M21 3v5h-5"/>
+            </svg>
+            Restaurar
+        </button>
+        <!-- Eliminar (rojo) - siempre visible -->
+        <button class="btn-sel btn-sel-delete" id="deleteSelectedBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+            Eliminar
+        </button>
+    </div>
+
+    <!-- Upload overlay -->
+    <div class="upload-overlay" id="uploadOverlay">
+        <div class="spinner"></div>
+        <p style="font-weight:500;margin-bottom:8px;">Subiendo archivos...</p>
+        <p id="uploadStatus" style="font-size:14px;color:rgba(255,255,255,0.8);margin-bottom:8px;">0 de 0</p>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+</div>
+
+<script>
+// ─── CONFIG ────────────────────────────────────────────────────────────
+const SUPABASE_URL      = window.SUPABASE_CONFIG?.url;
+const SUPABASE_ANON_KEY = window.SUPABASE_CONFIG?.key;
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    document.getElementById('loadingScreen').innerHTML =
+        '<div class="error-message"><strong>Error de Configuración</strong><br>No se encontraron las credenciales de Supabase.</div>';
+    throw new Error('Faltan credenciales de Supabase');
+}
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ─── ESTADO ────────────────────────────────────────────────────────────
+let user               = null;
+let items              = [];
+let currentFolderId    = 'root';
+let currentView        = 'browser';
+let currentPreviewItem = null;
+let isSignUpMode       = false;
+let isSelectionMode    = false;
+let selectedItems      = new Set();
+
+// ─── FIX 1+5: LONG PRESS & DRAG ───────────────────────────────────────
+const LP_MS  = 500;  // milisegundos para activar long press
+const LP_PX  = 8;    // píxeles de movimiento que cancelan el long press
+
+let lp = { timer: null, item: null, el: null, x0: 0, y0: 0, fired: false, dragging: false };
+let ghost = null;
+let desktopDragId = null;
+
+// Inicia el temporizador de long press
+function lpStart(e, item, cardEl) {
+    const pt   = e.touches ? e.touches[0] : e;
+    lp         = { timer: null, item, el: cardEl, x0: pt.clientX, y0: pt.clientY, fired: false, dragging: false };
+    lp.timer   = setTimeout(() => {
+        lp.fired = true;
+        navigator.vibrate?.(40); // vibración háptica en móvil
+    }, LP_MS);
+}
+
+// Seguimiento del movimiento para drag o cancelación
+function lpMove(e) {
+    if (!lp.item) return;
+    const pt   = e.touches ? e.touches[0] : e;
+    const dist = Math.hypot(pt.clientX - lp.x0, pt.clientY - lp.y0);
+
+    if (!lp.fired) {
+        // Movimiento antes de 500ms → era scroll, cancelar
+        if (dist > LP_PX) { clearTimeout(lp.timer); lp.item = null; }
+        return;
+    }
+
+    // Long press disparado. Si ahora se mueve → modo arrastre
+    if (dist > LP_PX && !lp.dragging) {
+        lp.dragging = true;
+        createGhost(lp.item, pt.clientX, pt.clientY);
+        lp.el?.classList.add('is-dragging');
+    }
+
+    if (lp.dragging && ghost) {
+        if (e.cancelable) e.preventDefault(); // evita scroll durante drag
+        ghost.style.left = `${pt.clientX - 48}px`;
+        ghost.style.top  = `${pt.clientY - 48}px`;
+        highlightDropTarget(pt.clientX, pt.clientY, lp.item.id);
+    }
+}
+
+// Fin del gesto
+async function lpEnd(e) {
+    clearTimeout(lp.timer);
+    if (!lp.item) return;
+
+    if (lp.dragging) {
+        // Buscar carpeta bajo el dedo
+        const pt     = e.changedTouches ? e.changedTouches[0] : e;
+        const target = getDropTarget(pt.clientX, pt.clientY, lp.item.id);
+        cleanupGhost(lp.el);
+        if (target) await moveItemToFolder(lp.item.id, target);
+
+    } else if (lp.fired) {
+        // Long press sin arrastre → entrar en modo selección
+        if (!isSelectionMode) isSelectionMode = true;
+        toggleItemSelection(lp.item.id);
+    }
+    // Si !lp.fired → toque normal, lo maneja el evento 'click'
+
+    lp = { timer: null, item: null, el: null, x0: 0, y0: 0, fired: false, dragging: false };
+}
+
+function createGhost(item, x, y) {
+    ghost = document.createElement('div');
+    ghost.className = 'ghost-drag';
+    if (item.type === 'folder') {
+        ghost.innerHTML = `<svg width="52" height="52" viewBox="0 0 24 24" fill="#dbeafe">
+            <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>`;
+    } else {
+        const img = document.createElement('img');
+        img.src   = item.imageUrl;
+        ghost.appendChild(img);
+    }
+    ghost.style.left = `${x - 48}px`;
+    ghost.style.top  = `${y - 48}px`;
+    document.body.appendChild(ghost);
+}
+
+function highlightDropTarget(x, y, sourceId) {
+    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    const el = document.elementFromPoint(x, y);
+    const fc = el?.closest('[data-drop-folder]');
+    if (fc && fc.dataset.dropFolder !== sourceId) fc.classList.add('drag-over');
+}
+
+function getDropTarget(x, y, sourceId) {
+    const el = document.elementFromPoint(x, y);
+    const fc = el?.closest('[data-drop-folder]');
+    return (fc && fc.dataset.dropFolder !== sourceId) ? fc.dataset.dropFolder : null;
+}
+
+function cleanupGhost(cardEl) {
+    ghost?.remove(); ghost = null;
+    cardEl?.classList.remove('is-dragging');
+    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+}
+
+async function moveItemToFolder(itemId, folderId) {
+    try {
+        const { error } = await supabaseClient.from('gallery_items')
+            .update({ parent_id: folderId }).eq('id', itemId);
+        if (error) throw error;
+        await loadItems();
+    } catch (err) { showModal({ title: 'Error', message: err.message }); }
+}
+
+// ─── MODAL ─────────────────────────────────────────────────────────────
+function showModal({ title, message, showInput = false, inputType = 'text', onConfirm, showCancel = false }) {
+    const modal     = document.getElementById('customModal');
+    const inputCont = document.getElementById('modalInputContainer');
+    const input     = document.getElementById('modalInput');
+    const cancelBtn = document.getElementById('modalCancelBtn');
+
+    document.getElementById('modalTitle').textContent   = title;
+    document.getElementById('modalMessage').textContent = message;
+    input.value = ''; input.type = inputType;
+    input.placeholder = inputType === 'password' ? 'Nueva contraseña' : 'Escribe aquí...';
+
+    showInput  ? inputCont.classList.remove('hidden') : inputCont.classList.add('hidden');
+    showCancel ? cancelBtn.classList.remove('hidden')  : cancelBtn.classList.add('hidden');
+    modal.classList.remove('hidden');
+
+    const confirmBtn = document.getElementById('modalConfirmBtn');
+    confirmBtn.onclick = () => { modal.classList.add('hidden'); onConfirm?.(input.value); };
+    cancelBtn.onclick  = () => modal.classList.add('hidden');
+
+    // Permitir Enter en el input
+    input.onkeydown = (e) => { if (e.key === 'Enter') confirmBtn.click(); };
+}
+
+// ─── PASSWORD TOGGLE ───────────────────────────────────────────────────
+function togglePasswordVisibility() {
+    const input   = document.getElementById('authPassword');
+    const eye     = document.getElementById('eyeIcon');
+    const isHide  = input.type === 'password';
+    input.type    = isHide ? 'text' : 'password';
+    eye.innerHTML = isHide
+        ? `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`
+        : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+}
+
+// ─── AUTH ──────────────────────────────────────────────────────────────
+function toggleAuthMode() {
+    isSignUpMode = !isSignUpMode;
+    document.getElementById('authTitle').textContent   = isSignUpMode ? 'Crear Cuenta' : 'Iniciar Sesión';
+    document.getElementById('mainAuthBtn').textContent = isSignUpMode ? 'Registrarse'  : 'Entrar';
+    document.getElementById('toggleAuthText').innerHTML = isSignUpMode
+        ? '¿Ya tienes cuenta? <a href="#" id="toggleAuthLink" style="color:#2563eb;text-decoration:none;font-weight:500;">Inicia Sesión</a>'
+        : '¿No tienes cuenta? <a href="#" id="toggleAuthLink" style="color:#2563eb;text-decoration:none;font-weight:500;">Regístrate</a>';
+    document.getElementById('toggleAuthLink').addEventListener('click', e => { e.preventDefault(); toggleAuthMode(); });
+}
+
+async function handleAuth() {
+    const email    = document.getElementById('authEmail').value;
+    const password = document.getElementById('authPassword').value;
+    if (!email || !password) { showModal({ title: 'Atención', message: 'Por favor, rellena todos los campos.' }); return; }
+    try {
+        if (isSignUpMode) {
+            const { error } = await supabaseClient.auth.signUp({ email, password, options: { emailRedirectTo: location.origin + location.pathname } });
+            if (error) throw error;
+            showModal({ title: '¡Casi listo!', message: 'Revisa tu correo para confirmar tu cuenta.', onConfirm: () => toggleAuthMode() });
+        } else {
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+            init();
         }
+    } catch (err) { showModal({ title: 'Error', message: err.message }); }
+}
 
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+async function resetPassword() {
+    const email = document.getElementById('authEmail').value;
+    if (!email) { showModal({ title: 'Aviso', message: 'Escribe tu correo primero en el campo de email.' }); return; }
+    try {
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+        if (error) throw error;
+        showModal({ title: '✅ Enviado', message: 'Revisa tu correo para restablecer la contraseña. El link expira en 1 hora.' });
+    } catch (err) { showModal({ title: 'Error', message: err.message }); }
+}
 
-        // ─── ESTADO ───
-        let user              = null;
-        let items             = [];
-        let currentFolderId   = 'root';
-        let currentView       = 'browser';
-        let currentPreviewItem = null;
-        let isSignUpMode      = false;
-        let isSelectionMode   = false;
-        let selectedItems     = new Set();
+async function handleLogout() { await supabaseClient.auth.signOut(); location.reload(); }
 
-        // ─────────────────────────────────────────
-        //  MODAL PERSONALIZADO
-        // ─────────────────────────────────────────
-        function showModal({ title, message, showInput = false, inputType = 'text', onConfirm, showCancel = false }) {
-            const modal    = document.getElementById('customModal');
-            const inputCont = document.getElementById('modalInputContainer');
-            const input    = document.getElementById('modalInput');
-            const cancelBtn = document.getElementById('modalCancelBtn');
+// ─── INIT ──────────────────────────────────────────────────────────────
+async function init() {
+    try {
+        const hashParams  = new URLSearchParams(location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const type        = hashParams.get('type');
 
-            document.getElementById('modalTitle').textContent   = title;
-            document.getElementById('modalMessage').textContent = message;
-
-            input.value = '';
-            input.type  = inputType;
-            input.placeholder = inputType === 'password' ? 'Nueva contraseña' : 'Escribe aquí...';
-
-            showInput  ? inputCont.classList.remove('hidden') : inputCont.classList.add('hidden');
-            showCancel ? cancelBtn.classList.remove('hidden') : cancelBtn.classList.add('hidden');
-
-            modal.classList.remove('hidden');
-
-            document.getElementById('modalConfirmBtn').onclick = () => {
-                modal.classList.add('hidden');
-                if (onConfirm) onConfirm(input.value);
-            };
-            cancelBtn.onclick = () => modal.classList.add('hidden');
-        }
-
-        // ─────────────────────────────────────────
-        //  FIX 1 — TOGGLE VISIBILIDAD CONTRASEÑA
-        // ─────────────────────────────────────────
-        function togglePasswordVisibility() {
-            const input   = document.getElementById('authPassword');
-            const eyeIcon = document.getElementById('eyeIcon');
-            const isHidden = input.type === 'password';
-            input.type = isHidden ? 'text' : 'password';
-
-            // Ojo abierto  → mostrando → cambiar a ojo cerrado (con línea diagonal)
-            // Ojo cerrado  → oculto    → cambiar a ojo abierto
-            eyeIcon.innerHTML = isHidden
-                ? /* ojo tachado */ `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`
-                : /* ojo normal */ `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
-        }
-
-        // ─────────────────────────────────────────
-        //  AUTENTICACIÓN
-        // ─────────────────────────────────────────
-        function toggleAuthMode() {
-            isSignUpMode = !isSignUpMode;
-            document.getElementById('authTitle').textContent    = isSignUpMode ? "Crear Cuenta" : "Iniciar Sesión";
-            document.getElementById('mainAuthBtn').textContent  = isSignUpMode ? "Registrarse"  : "Entrar";
-            document.getElementById('toggleAuthText').innerHTML = isSignUpMode
-                ? '¿Ya tienes cuenta? <a href="#" id="toggleAuthLink" style="color:#2563eb;text-decoration:none;font-weight:500;">Inicia Sesión</a>'
-                : '¿No tienes cuenta? <a href="#" id="toggleAuthLink" style="color:#2563eb;text-decoration:none;font-weight:500;">Regístrate</a>';
-            document.getElementById('toggleAuthLink').addEventListener('click', (e) => { e.preventDefault(); toggleAuthMode(); });
-        }
-
-        async function handleAuth() {
-            const email    = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
-            if (!email || !password) { showModal({ title: "Atención", message: "Por favor, rellena todos los campos." }); return; }
-            try {
-                if (isSignUpMode) {
-                    const { error } = await supabaseClient.auth.signUp({
-                        email, password,
-                        options: { emailRedirectTo: window.location.origin + window.location.pathname }
-                    });
-                    if (error) throw error;
-                    showModal({ title: "¡Casi listo!", message: "Revisa tu correo para confirmar tu cuenta.", onConfirm: () => toggleAuthMode() });
-                } else {
-                    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-                    if (error) throw error;
-                    init();
-                }
-            } catch (error) { showModal({ title: "Error", message: error.message }); }
-        }
-
-        async function resetPassword() {
-            const email = document.getElementById('authEmail').value;
-            if (!email) { showModal({ title: "Aviso", message: "Escribe tu correo primero en el campo de email." }); return; }
-            try {
-                const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-                    redirectTo: window.location.origin + window.location.pathname
-                });
-                if (error) throw error;
-                showModal({ title: "✅ Enviado", message: "Revisa tu correo para restablecer la contraseña. El link expira en 1 hora." });
-            } catch (error) { showModal({ title: "Error", message: error.message }); }
-        }
-
-        async function handleLogout() {
-            await supabaseClient.auth.signOut();
-            window.location.reload();
-        }
-
-        // ─────────────────────────────────────────
-        //  INICIALIZACIÓN
-        // ─────────────────────────────────────────
-        async function init() {
-            try {
-                const hashParams  = new URLSearchParams(window.location.hash.substring(1));
-                const accessToken = hashParams.get('access_token');
-                const type        = hashParams.get('type');
-
-                if (accessToken) {
-                    await supabaseClient.auth.setSession({
-                        access_token:  accessToken,
-                        refresh_token: hashParams.get('refresh_token')
-                    });
-
-                    if (type === 'recovery') {
-                        window.history.replaceState({}, document.title, window.location.pathname);
-                        setTimeout(() => {
-                            showModal({
-                                title:      "🔑 Nueva Contraseña",
-                                message:    "Ingresa tu nueva clave (mínimo 6 caracteres):",
-                                showInput:  true,
-                                inputType:  'password',
-                                showCancel: true,
-                                onConfirm: async (newPass) => {
-                                    if (!newPass || newPass.length < 6) {
-                                        showModal({ title: "Error", message: "La contraseña debe tener al menos 6 caracteres." });
-                                        return;
-                                    }
-                                    try {
-                                        const { error } = await supabaseClient.auth.updateUser({ password: newPass });
-                                        if (error) throw error;
-                                        showModal({ title: "✅ Éxito", message: "Contraseña actualizada correctamente.", onConfirm: () => window.location.reload() });
-                                    } catch (error) { showModal({ title: "Error", message: error.message }); }
-                                }
-                            });
-                        }, 800);
-                        return;
+        if (accessToken) {
+            await supabaseClient.auth.setSession({ access_token: accessToken, refresh_token: hashParams.get('refresh_token') });
+            if (type === 'recovery') {
+                history.replaceState({}, document.title, location.pathname);
+                setTimeout(() => showModal({
+                    title: '🔑 Nueva Contraseña', message: 'Ingresa tu nueva clave (mínimo 6 caracteres):',
+                    showInput: true, inputType: 'password', showCancel: true,
+                    onConfirm: async (newPass) => {
+                        if (!newPass || newPass.length < 6) { showModal({ title: 'Error', message: 'La contraseña debe tener al menos 6 caracteres.' }); return; }
+                        try {
+                            const { error } = await supabaseClient.auth.updateUser({ password: newPass });
+                            if (error) throw error;
+                            showModal({ title: '✅ Éxito', message: 'Contraseña actualizada.', onConfirm: () => location.reload() });
+                        } catch (err) { showModal({ title: 'Error', message: err.message }); }
                     }
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                }
-
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                if (!session) {
-                    document.getElementById('loadingScreen').classList.add('hidden');
-                    document.getElementById('authScreen').classList.remove('hidden');
-                    document.getElementById('app').classList.add('hidden');
-                    return;
-                }
-
-                user = session.user;
-
-                // Mostrar iniciales y email en el menú de usuario
-                document.getElementById('userAvatar').textContent    = user.email.substring(0, 2).toUpperCase();
-                document.getElementById('userEmailDisplay').textContent = user.email;
-
-                setupRealtimeSubscription();
-                await loadItems();
-
-                document.getElementById('loadingScreen').classList.add('hidden');
-                document.getElementById('authScreen').classList.add('hidden');
-                document.getElementById('app').classList.remove('hidden');
-
-                if (type === 'signup') showModal({ title: "¡Bienvenido!", message: "Cuenta activada con éxito." });
-
-            } catch (err) {
-                console.error("Error:", err);
-                showModal({ title: "Error", message: "Ocurrió un error al inicializar la aplicación." });
-            }
-        }
-
-        // ─────────────────────────────────────────
-        //  REALTIME
-        // ─────────────────────────────────────────
-        function setupRealtimeSubscription() {
-            supabaseClient.channel('gallery_changes')
-                .on('postgres_changes', {
-                    event:  '*',
-                    schema: 'public',
-                    table:  'gallery_items',
-                    filter: `user_id=eq.${user.id}`
-                }, () => loadItems())
-                .subscribe();
-        }
-
-        // ─────────────────────────────────────────
-        //  DATOS
-        // ─────────────────────────────────────────
-        async function loadItems() {
-            if (!user) return;
-            const { data, error } = await supabaseClient
-                .from('gallery_items')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: false });
-
-            if (error) { console.error("Error cargando items:", error); return; }
-
-            items = await Promise.all(data.map(async (item) => {
-                if (item.type === 'image' && item.storage_path) {
-                    const { data: urlData } = supabaseClient.storage.from('photos').getPublicUrl(item.storage_path);
-                    return { ...item, imageUrl: urlData.publicUrl };
-                }
-                return item;
-            }));
-            renderContent();
-        }
-
-        // ─────────────────────────────────────────
-        //  RENDER
-        // ─────────────────────────────────────────
-        function renderContent() {
-            renderBreadcrumbs();
-            renderGrid();
-        }
-
-        function renderBreadcrumbs() {
-            const breadcrumbsEl = document.getElementById('breadcrumbs');
-            const actionsBar    = document.getElementById('actionsBar');
-            const trashBtn      = document.getElementById('trashBtn');
-
-            let html = '<button class="breadcrumb" data-action="goToRoot">Mi Unidad</button>';
-            getCurrentPath().forEach(folder => {
-                html += ` <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-                          <button class="breadcrumb" data-folder-id="${folder.id}">${folder.name}</button>`;
-            });
-
-            if (currentView === 'trash') {
-                html += ` <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-                          <span class="breadcrumb-current">Papelera</span>`;
-                actionsBar.classList.add('hidden');
-                trashBtn.classList.add('active');
-            } else {
-                actionsBar.classList.remove('hidden');
-                trashBtn.classList.remove('active');
-            }
-
-            breadcrumbsEl.innerHTML = html;
-            breadcrumbsEl.querySelectorAll('[data-action="goToRoot"]').forEach(btn => btn.addEventListener('click', goToRoot));
-            breadcrumbsEl.querySelectorAll('[data-folder-id]').forEach(btn =>
-                btn.addEventListener('click', (e) => navigateToFolder(e.target.dataset.folderId))
-            );
-        }
-
-        function getCurrentPath() {
-            const path = [];
-            let current = currentFolderId;
-            while (current !== 'root') {
-                const folder = items.find(i => i.id === current);
-                if (folder) { path.unshift(folder); current = folder.parent_id; }
-                else break;
-            }
-            return path;
-        }
-
-        // ── renderItem MOVIDA FUERA de renderGrid (corrección de estructura) ──
-        function renderItem(item) {
-            const itemJson   = JSON.stringify(item).replace(/"/g, '&quot;');
-            const isSelected = selectedItems.has(item.id);
-
-            // Contenido del preview (imagen o ícono de carpeta)
-            const previewContent = item.type === 'folder'
-                ? `<svg class="folder-icon" viewBox="0 0 24 24" fill="currentColor">
-                       <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
-                   </svg>`
-                : `<img src="${item.imageUrl}" alt="${item.name}" loading="lazy">`;
-
-            // FIX 4: Círculo selector (reemplaza al botón "Seleccionar")
-            const selectToggle = `<div class="select-toggle ${isSelected ? 'selected' : ''}"
-                                       data-action="toggle-select"
-                                       data-item-id="${item.id}"></div>`;
-
-            // FIX 2: Botón lápiz para renombrar carpeta (solo en carpetas, fuera de selección)
-            const renameBtn = (item.type === 'folder' && !isSelectionMode)
-                ? `<button class="btn-rename"
-                           data-action="rename"
-                           data-item-id="${item.id}"
-                           data-item-name="${item.name.replace(/"/g, '&quot;')}"
-                           title="Renombrar carpeta">
-                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                       </svg>
-                   </button>`
-                : '';
-
-            // Botón de menú (⋮), solo fuera de modo selección
-            const menuBtn = !isSelectionMode
-                ? `<button class="item-menu-btn" data-action="menu" data-item="${itemJson}">⋮</button>`
-                : '';
-
-            return `
-                <div class="item-card">
-                    ${selectToggle}
-                    <div class="item-preview" data-action="card-click" data-item="${itemJson}">
-                        ${previewContent}
-                    </div>
-                    <div class="item-info">
-                        <div class="item-header">
-                            <p class="item-name">${item.name}</p>
-                            ${renameBtn}
-                            ${menuBtn}
-                        </div>
-                    </div>
-                </div>`;
-        }
-
-        function renderGrid() {
-            const contentArea    = document.getElementById('contentArea');
-            const displayedItems = items.filter(item =>
-                currentView === 'trash'
-                    ? item.is_deleted
-                    : !item.is_deleted && item.parent_id === currentFolderId
-            );
-
-            if (displayedItems.length === 0) {
-                contentArea.innerHTML = `
-                    <div class="empty-state">
-                        <p class="empty-title">No hay nada aquí</p>
-                        <p class="empty-text">${currentView === 'trash' ? 'La papelera está vacía' : 'Crea una carpeta o sube fotos'}</p>
-                    </div>`;
+                }), 800);
                 return;
             }
+            history.replaceState({}, document.title, location.pathname);
+        }
 
-            // Clase "selection-mode" en el grid para el CSS del toggle
-            contentArea.innerHTML = `
-                <div class="grid ${isSelectionMode ? 'selection-mode' : ''}">
-                    ${displayedItems.map(renderItem).join('')}
-                </div>`;
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) {
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('authScreen').classList.remove('hidden');
+            return;
+        }
 
-            // Click en la card (preview)
-            contentArea.querySelectorAll('[data-action="card-click"]').forEach(el => {
-                el.addEventListener('click', () => {
-                    const item = JSON.parse(el.dataset.item);
-                    if (isSelectionMode) {
-                        toggleItemSelection(item.id);
-                    } else {
-                        handleItemClick(item);
+        user = session.user;
+        document.getElementById('userAvatar').textContent      = user.email.substring(0, 2).toUpperCase();
+        document.getElementById('userEmailDisplay').textContent = user.email;
+
+        setupRealtime();
+        await loadItems();
+
+        document.getElementById('loadingScreen').classList.add('hidden');
+        document.getElementById('authScreen').classList.add('hidden');
+        document.getElementById('app').classList.remove('hidden');
+
+        if (type === 'signup') showModal({ title: '¡Bienvenido!', message: 'Cuenta activada con éxito.' });
+
+    } catch (err) {
+        console.error(err);
+        showModal({ title: 'Error', message: 'Ocurrió un error al inicializar la aplicación.' });
+    }
+}
+
+function setupRealtime() {
+    supabaseClient.channel('gallery_changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'gallery_items', filter: `user_id=eq.${user.id}` }, () => loadItems())
+        .subscribe();
+}
+
+// ─── DATOS ─────────────────────────────────────────────────────────────
+async function loadItems() {
+    if (!user) return;
+    const { data, error } = await supabaseClient
+        .from('gallery_items').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+    if (error) { console.error(error); return; }
+
+    items = await Promise.all(data.map(async item => {
+        if (item.type === 'image' && item.storage_path) {
+            const { data: u } = supabaseClient.storage.from('photos').getPublicUrl(item.storage_path);
+            return { ...item, imageUrl: u.publicUrl };
+        }
+        return item;
+    }));
+    renderContent();
+}
+
+// ─── RENDER ────────────────────────────────────────────────────────────
+function renderContent() { renderBreadcrumbs(); renderGrid(); }
+
+function renderBreadcrumbs() {
+    const breadcrumbsEl = document.getElementById('breadcrumbs');
+    const actionsBar    = document.getElementById('actionsBar');
+    const trashBtn      = document.getElementById('trashBtn');
+
+    let html = '<button class="breadcrumb" data-action="goRoot">Mi Unidad</button>';
+    getCurrentPath().forEach(f => {
+        html += ` <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                  <button class="breadcrumb" data-folder-id="${f.id}">${f.name}</button>`;
+    });
+
+    if (currentView === 'trash') {
+        html += ` <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                  <span class="breadcrumb-current">Papelera</span>`;
+        actionsBar.classList.add('hidden');
+        trashBtn.classList.add('active');
+    } else {
+        actionsBar.classList.remove('hidden');
+        trashBtn.classList.remove('active');
+    }
+
+    breadcrumbsEl.innerHTML = html;
+    breadcrumbsEl.querySelectorAll('[data-action="goRoot"]').forEach(b => b.addEventListener('click', goToRoot));
+    breadcrumbsEl.querySelectorAll('[data-folder-id]').forEach(b =>
+        b.addEventListener('click', () => navigateToFolder(b.dataset.folderId))
+    );
+}
+
+function getCurrentPath() {
+    const path = []; let cur = currentFolderId;
+    while (cur !== 'root') { const f = items.find(i => i.id === cur); if (f) { path.unshift(f); cur = f.parent_id; } else break; }
+    return path;
+}
+
+// FIX 4: renderItem — sin ⋮ en vista normal, solo en papelera
+function renderItem(item) {
+    const ij       = JSON.stringify(item).replace(/"/g, '&quot;');
+    const isSel    = selectedItems.has(item.id);
+    const isTrash  = currentView === 'trash';
+
+    const preview  = item.type === 'folder'
+        ? `<svg class="folder-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>`
+        : `<img src="${item.imageUrl}" alt="${item.name}" loading="lazy" draggable="false">`;
+
+    // Círculo selector — FIX 1: visible via CSS hover/selection-mode
+    const circle   = `<div class="select-toggle ${isSel ? 'selected' : ''}" data-sel="${item.id}"></div>`;
+
+    // Lápiz solo en carpetas, fuera de selección y fuera de papelera
+    const pencil   = (!isTrash && !isSelectionMode)
+        ? `<button class="btn-rename" data-rename-id="${item.id}" data-rename-name="${item.name.replace(/"/g,'&quot;')}" title="Renombrar">
+               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+               </svg>
+           </button>` : '';
+
+    // Botón restaurar en papelera (acceso rápido individual)
+    const restoreQ = isTrash
+        ? `<button class="btn-restore-item" data-restore='${ij}'>Restaurar</button>` : '';
+
+    // ⋮ solo en papelera
+    const menuBtn  = isTrash
+        ? `<button class="item-menu-btn" data-menu='${ij}'>⋮</button>` : '';
+
+    const dropAttr = (item.type === 'folder' && !isTrash) ? `data-drop-folder="${item.id}"` : '';
+    const dragAttr = !isTrash ? 'draggable="true"' : '';
+
+    return `
+        <div class="item-card" data-card-id="${item.id}" ${dropAttr} ${dragAttr}>
+            ${circle}
+            <div class="item-preview" data-click='${ij}'>${preview}</div>
+            <div class="item-info">
+                <div class="item-header">
+                    <p class="item-name">${item.name}</p>
+                    ${pencil}${restoreQ}${menuBtn}
+                </div>
+            </div>
+        </div>`;
+}
+
+function renderGrid() {
+    const ca      = document.getElementById('contentArea');
+    const shown   = items.filter(i =>
+        currentView === 'trash' ? i.is_deleted : !i.is_deleted && i.parent_id === currentFolderId
+    );
+
+    if (!shown.length) {
+        ca.innerHTML = `
+            <div class="empty-state">
+                <p class="empty-title">No hay nada aquí</p>
+                <p class="empty-text">${currentView === 'trash' ? 'La papelera está vacía' : 'Mantén presionado un elemento para seleccionarlo'}</p>
+            </div>`;
+        return;
+    }
+
+    ca.innerHTML = `<div class="grid ${isSelectionMode ? 'selection-mode' : ''}">${shown.map(renderItem).join('')}</div>`;
+
+    // — Click en preview (navegar o abrir) —
+    ca.querySelectorAll('[data-click]').forEach(el => {
+        el.addEventListener('click', () => {
+            if (lp.fired) return; // fue long press, ignorar click
+            const item = JSON.parse(el.dataset.click);
+            if (isSelectionMode) toggleItemSelection(item.id);
+            else handleItemClick(item);
+        });
+    });
+
+    // — Círculo selector —
+    ca.querySelectorAll('[data-sel]').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!isSelectionMode) isSelectionMode = true;
+            toggleItemSelection(el.dataset.sel);
+        });
+    });
+
+    // — Lápiz renombrar —
+    ca.querySelectorAll('[data-rename-id]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            renameItem(btn.dataset.renameId, btn.dataset.renameName);
+        });
+    });
+
+    // — Restaurar individual —
+    ca.querySelectorAll('[data-restore]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            restoreItem(JSON.parse(btn.dataset.restore));
+        });
+    });
+
+    // — Menú ⋮ (papelera) —
+    ca.querySelectorAll('[data-menu]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showContextMenu(e, JSON.parse(btn.dataset.menu));
+        });
+    });
+
+    // — Long press + Touch drag (FIX 1 & 5) —
+    ca.querySelectorAll('[data-card-id]').forEach(card => {
+        const item = items.find(i => i.id === card.dataset.cardId);
+        if (!item) return;
+
+        // Touch
+        card.addEventListener('touchstart', (e) => lpStart(e, item, card), { passive: true });
+        card.addEventListener('touchmove',  lpMove, { passive: false });
+        card.addEventListener('touchend',   lpEnd,  { passive: true });
+        card.addEventListener('touchcancel', () => {
+            clearTimeout(lp.timer);
+            cleanupGhost(lp.el);
+            lp = { timer:null, item:null, el:null, x0:0, y0:0, fired:false, dragging:false };
+        });
+
+        // Desktop: long press via mousedown (selección)
+        let deskTimer = null;
+        card.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
+            deskTimer = setTimeout(() => {
+                if (!isSelectionMode) isSelectionMode = true;
+                toggleItemSelection(item.id);
+            }, LP_MS);
+        });
+        card.addEventListener('mouseup',    () => clearTimeout(deskTimer));
+        card.addEventListener('mouseleave', () => clearTimeout(deskTimer));
+
+        // Desktop: HTML5 drag → mover a carpeta
+        if (currentView !== 'trash') {
+            card.addEventListener('dragstart', (e) => {
+                desktopDragId = item.id;
+                e.dataTransfer.setData('text/plain', item.id);
+                e.dataTransfer.effectAllowed = 'move';
+                setTimeout(() => card.classList.add('is-dragging'), 0);
+            });
+            card.addEventListener('dragend', () => {
+                card.classList.remove('is-dragging');
+                document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+                desktopDragId = null;
+            });
+
+            // Solo carpetas aceptan drops
+            if (item.type === 'folder') {
+                card.addEventListener('dragover', (e) => {
+                    if (desktopDragId && desktopDragId !== item.id) {
+                        e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+                        card.classList.add('drag-over');
                     }
                 });
-            });
-
-            // FIX 4: Click en el círculo selector
-            contentArea.querySelectorAll('[data-action="toggle-select"]').forEach(el => {
-                el.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (!isSelectionMode) isSelectionMode = true;
-                    toggleItemSelection(el.dataset.itemId);
+                card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+                card.addEventListener('drop', async (e) => {
+                    e.preventDefault(); card.classList.remove('drag-over');
+                    const src = e.dataTransfer.getData('text/plain');
+                    if (src && src !== item.id) await moveItemToFolder(src, item.id);
                 });
-            });
-
-            // FIX 2: Click en lápiz renombrar
-            contentArea.querySelectorAll('[data-action="rename"]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    renameFolder(btn.dataset.itemId, btn.dataset.itemName);
-                });
-            });
-
-            // Click en menú ⋮
-            contentArea.querySelectorAll('[data-action="menu"]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const item = JSON.parse(btn.dataset.item);
-                    showContextMenu(e, item);
-                });
-            });
-        }
-
-        // ─────────────────────────────────────────
-        //  NAVEGACIÓN
-        // ─────────────────────────────────────────
-        function handleItemClick(item) {
-            if (item.type === 'folder') navigateToFolder(item.id);
-            else showPreview(item);
-        }
-
-        function navigateToFolder(folderId) {
-            currentFolderId = folderId;
-            currentView     = 'browser';
-            cancelSelection(); // salir de selección al cambiar de carpeta
-        }
-
-        function goToRoot() {
-            currentFolderId = 'root';
-            currentView     = 'browser';
-            cancelSelection();
-        }
-
-        function toggleTrash() {
-            currentView = currentView === 'trash' ? 'browser' : 'trash';
-            if (currentView === 'browser') currentFolderId = 'root';
-            cancelSelection();
-        }
-
-        // ─────────────────────────────────────────
-        //  OPERACIONES DE CARPETA
-        // ─────────────────────────────────────────
-        async function createFolder() {
-            showModal({
-                title: "Nueva Carpeta", message: "Escribe el nombre de la carpeta:",
-                showInput: true, showCancel: true,
-                onConfirm: async (name) => {
-                    if (!name?.trim()) return;
-                    try {
-                        const { error } = await supabaseClient.from('gallery_items').insert({
-                            user_id: user.id, name: name.trim(),
-                            type: 'folder', parent_id: currentFolderId, is_deleted: false
-                        });
-                        if (error) throw error;
-                    } catch (error) { showModal({ title: "Error", message: error.message }); }
-                }
-            });
-        }
-
-        // FIX 2: Renombrar carpeta
-        async function renameFolder(itemId, currentName) {
-            showModal({
-                title: "Renombrar carpeta",
-                message: `Nuevo nombre para "${currentName}":`,
-                showInput: true, showCancel: true,
-                onConfirm: async (newName) => {
-                    if (!newName?.trim() || newName.trim() === currentName) return;
-                    try {
-                        const { error } = await supabaseClient
-                            .from('gallery_items')
-                            .update({ name: newName.trim() })
-                            .eq('id', itemId);
-                        if (error) throw error;
-                    } catch (error) { showModal({ title: "Error", message: error.message }); }
-                }
-            });
-        }
-
-        // ─────────────────────────────────────────
-        //  SUBIDA DE ARCHIVOS
-        // ─────────────────────────────────────────
-        async function handleFileUpload(e) {
-            const files = Array.from(e.target.files || []);
-            if (files.length === 0 || !user) return;
-
-            const uploadOverlay = document.getElementById('uploadOverlay');
-            const progressFill  = document.getElementById('progressFill');
-            const uploadStatus  = document.getElementById('uploadStatus');
-            uploadOverlay.classList.add('visible');
-
-            let successCount = 0, errorCount = 0;
-
-            try {
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    uploadStatus.textContent  = `${i + 1} de ${files.length}`;
-                    progressFill.style.width  = `${((i + 1) / files.length) * 100}%`;
-
-                    try {
-                        const storagePath = `${user.id}/${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`;
-                        const { error: uploadError } = await supabaseClient.storage.from('photos').upload(storagePath, file);
-                        if (uploadError) throw uploadError;
-
-                        const { error: dbError } = await supabaseClient.from('gallery_items').insert({
-                            user_id: user.id, name: file.name, type: 'image',
-                            parent_id: currentFolderId, storage_path: storagePath, is_deleted: false
-                        });
-                        if (dbError) throw dbError;
-                        successCount++;
-                    } catch (fileError) { console.error(`Error subiendo ${file.name}:`, fileError); errorCount++; }
-                }
-
-                if (errorCount > 0) {
-                    showModal({ title: "Subida con errores", message: `✅ ${successCount} subidos\n❌ ${errorCount} fallaron` });
-                } else if (successCount > 0) {
-                    showModal({ title: "✅ Éxito", message: `${successCount} archivo${successCount > 1 ? 's' : ''} subido${successCount > 1 ? 's' : ''} correctamente.` });
-                }
-            } catch (error) {
-                showModal({ title: "Error", message: "Error durante la subida: " + error.message });
-            } finally {
-                uploadOverlay.classList.remove('visible');
-                progressFill.style.width    = '0%';
-                uploadStatus.textContent    = '0 de 0';
-                e.target.value              = '';
             }
         }
+    });
 
-        // ─────────────────────────────────────────
-        //  MENÚ CONTEXTUAL
-        // ─────────────────────────────────────────
-        function showContextMenu(event, item) {
-            const menu = document.getElementById('contextMenu');
-            menu.style.left = `${event.clientX}px`;
-            menu.style.top  = `${event.clientY}px`;
+    // Actualizar botones de la barra según vista
+    syncSelectionBar();
+}
 
-            menu.innerHTML = currentView === 'trash' ? `
-                <button class="context-menu-item restore" data-action="restore">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/></svg>
-                    Restaurar
-                </button>
-                <button class="context-menu-item danger" data-action="delete-permanent">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                    Eliminar Permanentemente
-                </button>` : `
-                <button class="context-menu-item danger" data-action="trash">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                    Mover a Papelera
-                </button>`;
+// ─── NAVEGACIÓN ────────────────────────────────────────────────────────
+function handleItemClick(item) {
+    if (item.type === 'folder') navigateToFolder(item.id);
+    else showPreview(item);
+}
+function navigateToFolder(id) { currentFolderId = id; currentView = 'browser'; cancelSelection(); }
+function goToRoot()            { currentFolderId = 'root'; currentView = 'browser'; cancelSelection(); }
+function toggleTrash()         { currentView = currentView === 'trash' ? 'browser' : 'trash'; if (currentView === 'browser') currentFolderId = 'root'; cancelSelection(); }
 
-            menu.classList.add('visible');
-
-            menu.querySelectorAll('[data-action]').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    const action = btn.dataset.action;
-                    menu.classList.remove('visible');
-                    if (action === 'trash')            await moveToTrash(item);
-                    else if (action === 'restore')     await restoreItem(item);
-                    else if (action === 'delete-permanent') await deletePermanently(item);
-                });
-            });
-
-            setTimeout(() => {
-                document.addEventListener('click', () => menu.classList.remove('visible'), { once: true });
-            }, 10);
-        }
-
-        // ─────────────────────────────────────────
-        //  OPERACIONES DE ITEMS
-        // ─────────────────────────────────────────
-        async function moveToTrash(item) {
+// ─── CARPETA / RENAME ──────────────────────────────────────────────────
+async function createFolder() {
+    showModal({
+        title: 'Nueva Carpeta', message: 'Escribe el nombre de la carpeta:', showInput: true, showCancel: true,
+        onConfirm: async (name) => {
+            if (!name?.trim()) return;
             try {
-                const { error } = await supabaseClient.from('gallery_items').update({ is_deleted: true }).eq('id', item.id);
+                const { error } = await supabaseClient.from('gallery_items').insert({ user_id: user.id, name: name.trim(), type: 'folder', parent_id: currentFolderId, is_deleted: false });
                 if (error) throw error;
-            } catch (error) { showModal({ title: "Error", message: error.message }); }
+            } catch (err) { showModal({ title: 'Error', message: err.message }); }
         }
+    });
+}
 
-        async function restoreItem(item) {
+// FIX 3: Renombrar — funciona para carpetas Y archivos
+async function renameItem(itemId, currentName) {
+    showModal({
+        title: 'Renombrar', message: `Nuevo nombre para "${currentName}":`,
+        showInput: true, showCancel: true,
+        onConfirm: async (newName) => {
+            if (!newName?.trim() || newName.trim() === currentName) return;
             try {
-                const { error } = await supabaseClient.from('gallery_items').update({ is_deleted: false }).eq('id', item.id);
+                const { error } = await supabaseClient.from('gallery_items').update({ name: newName.trim() }).eq('id', itemId);
                 if (error) throw error;
-                showModal({ title: "✅ Restaurado", message: "El elemento ha sido restaurado." });
-            } catch (error) { showModal({ title: "Error", message: error.message }); }
+            } catch (err) { showModal({ title: 'Error', message: err.message }); }
         }
+    });
+}
 
-        async function deletePermanently(item) {
-            showModal({
-                title: "⚠️ Confirmar", message: "¿Eliminar permanentemente? Esta acción no se puede deshacer.",
-                showCancel: true,
-                onConfirm: async () => {
-                    try {
-                        if (item.storage_path) await supabaseClient.storage.from('photos').remove([item.storage_path]);
-                        const { error } = await supabaseClient.from('gallery_items').delete().eq('id', item.id);
-                        if (error) throw error;
-                        showModal({ title: "✅ Eliminado", message: "Elemento eliminado permanentemente." });
-                    } catch (error) { showModal({ title: "Error", message: error.message }); }
-                }
+// ─── SUBIDA ────────────────────────────────────────────────────────────
+async function handleFileUpload(e) {
+    const files = Array.from(e.target.files || []);
+    if (!files.length || !user) return;
+
+    const overlay = document.getElementById('uploadOverlay');
+    const pFill   = document.getElementById('progressFill');
+    const pStatus = document.getElementById('uploadStatus');
+    overlay.classList.add('visible');
+
+    let ok = 0, fail = 0;
+    for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        pStatus.textContent = `${i+1} de ${files.length}`;
+        pFill.style.width   = `${((i+1)/files.length)*100}%`;
+        try {
+            const path = `${user.id}/${Date.now()}_${Math.random().toString(36).slice(2)}_${f.name}`;
+            const { error: e1 } = await supabaseClient.storage.from('photos').upload(path, f);
+            if (e1) throw e1;
+            const { error: e2 } = await supabaseClient.from('gallery_items').insert({
+                user_id: user.id, name: f.name, type: 'image', parent_id: currentFolderId, storage_path: path, is_deleted: false
             });
-        }
+            if (e2) throw e2;
+            ok++;
+        } catch (err) { console.error(err); fail++; }
+    }
 
-        // ─────────────────────────────────────────
-        //  VISTA PREVIA
-        // ─────────────────────────────────────────
-        function showPreview(item) {
-            currentPreviewItem = item;
-            document.getElementById('previewImage').src     = item.imageUrl;
-            document.getElementById('previewTitle').textContent = item.name;
-            document.getElementById('previewModal').classList.add('visible');
-        }
+    overlay.classList.remove('visible');
+    pFill.style.width = '0%'; pStatus.textContent = '0 de 0'; e.target.value = '';
 
-        function closePreview() {
-            document.getElementById('previewModal').classList.remove('visible');
-            currentPreviewItem = null;
-        }
+    if (fail) showModal({ title: 'Subida con errores', message: `✅ ${ok} subidos\n❌ ${fail} fallaron` });
+    else if (ok) showModal({ title: '✅ Éxito', message: `${ok} archivo${ok>1?'s':''} subido${ok>1?'s':''} correctamente.` });
+}
 
-        async function downloadCurrentImage() {
-            if (!currentPreviewItem) return;
-            try {
-                const response = await fetch(currentPreviewItem.imageUrl);
-                const blob     = await response.blob();
-                const url      = window.URL.createObjectURL(blob);
-                const a        = document.createElement('a');
-                a.href = url; a.download = currentPreviewItem.name;
-                document.body.appendChild(a); a.click(); document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-            } catch (error) { showModal({ title: "Error", message: "No se pudo descargar la imagen." }); }
-        }
-
-        async function deleteCurrentImage() {
-            if (!currentPreviewItem) return;
-            closePreview();
-            await moveToTrash(currentPreviewItem);
-        }
-
-        // ─────────────────────────────────────────
-        //  FIX 4 & 5 — SELECCIÓN MÚLTIPLE
-        // ─────────────────────────────────────────
-        function cancelSelection() {
-            isSelectionMode = false;
-            selectedItems.clear();
-            document.getElementById('selectionBar').classList.remove('visible');
-            renderContent();
-        }
-
-        function toggleItemSelection(itemId) {
-            if (selectedItems.has(itemId)) selectedItems.delete(itemId);
-            else selectedItems.add(itemId);
-            updateSelectionUI();
-        }
-
-        function updateSelectionUI() {
-            const count = selectedItems.size;
-            if (count > 0) {
-                document.getElementById('selectionBar').classList.add('visible');
-            } else {
-                // Sin elementos seleccionados → salir del modo selección
-                document.getElementById('selectionBar').classList.remove('visible');
-                isSelectionMode = false;
-            }
-            renderGrid();
-        }
-
-        async function deleteSelectedItems() {
-            if (selectedItems.size === 0) return;
-            showModal({
-                title: "⚠️ Confirmar",
-                message: `¿Mover ${selectedItems.size} elemento(s) a la papelera?`,
-                showCancel: true,
-                onConfirm: async () => {
-                    try {
-                        for (const itemId of Array.from(selectedItems)) {
-                            await supabaseClient.from('gallery_items').update({ is_deleted: true }).eq('id', itemId);
-                        }
-                        showModal({ title: "✅ Éxito", message: `${selectedItems.size} elemento(s) movido(s) a la papelera.` });
-                        cancelSelection();
-                    } catch (error) { showModal({ title: "Error", message: error.message }); }
-                }
-            });
-        }
-
-        async function downloadSelectedItems() {
-            if (selectedItems.size === 0) return;
-            const selectedImages = items.filter(item => selectedItems.has(item.id) && item.type === 'image');
-            if (selectedImages.length === 0) { showModal({ title: "Aviso", message: "Solo se pueden descargar imágenes." }); return; }
-
-            for (const item of selectedImages) {
-                try {
-                    const response = await fetch(item.imageUrl);
-                    const blob     = await response.blob();
-                    const url      = window.URL.createObjectURL(blob);
-                    const a        = document.createElement('a');
-                    a.href = url; a.download = item.name;
-                    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-                    window.URL.revokeObjectURL(url);
-                    await new Promise(r => setTimeout(r, 100));
-                } catch (e) { console.error(`Error descargando ${item.name}:`, e); }
-            }
-            showModal({ title: "✅ Éxito", message: `${selectedImages.length} imagen(es) descargada(s).` });
-        }
-
-        async function moveSelectedItems() {
-            if (selectedItems.size === 0) return;
-            const folders = items.filter(item => item.type === 'folder' && !item.is_deleted && item.parent_id === currentFolderId);
-            if (folders.length === 0) { showModal({ title: "Aviso", message: "No hay carpetas disponibles. Crea una carpeta primero." }); return; }
-
-            const folderList = folders.map(f => `- ${f.name} (ID: ${f.id})`).join('\n');
-            showModal({
-                title: "Mover elementos",
-                message: `Carpetas disponibles:\n${folderList}\n\nEscribe el ID de la carpeta destino:`,
-                showInput: true, showCancel: true,
-                onConfirm: async (targetId) => {
-                    const targetFolder = folders.find(f => f.id === targetId);
-                    if (!targetFolder) { showModal({ title: "Error", message: "Carpeta no válida." }); return; }
-                    try {
-                        for (const itemId of Array.from(selectedItems)) {
-                            await supabaseClient.from('gallery_items').update({ parent_id: targetId }).eq('id', itemId);
-                        }
-                        showModal({ title: "✅ Éxito", message: `${selectedItems.size} elemento(s) movido(s) a "${targetFolder.name}".` });
-                        cancelSelection();
-                    } catch (error) { showModal({ title: "Error", message: error.message }); }
-                }
-            });
-        }
-
-        // ─────────────────────────────────────────
-        //  EVENT LISTENERS
-        // ─────────────────────────────────────────
-        document.addEventListener('DOMContentLoaded', () => {
-
-            // Auth
-            document.getElementById('mainAuthBtn').addEventListener('click', handleAuth);
-            document.getElementById('toggleAuthLink').addEventListener('click', (e) => { e.preventDefault(); toggleAuthMode(); });
-            document.getElementById('resetPasswordLink').addEventListener('click', (e) => { e.preventDefault(); resetPassword(); });
-            document.getElementById('authPassword').addEventListener('keypress', (e) => { if (e.key === 'Enter') handleAuth(); });
-
-            // FIX 1: Ojito contraseña
-            document.getElementById('togglePasswordBtn').addEventListener('click', togglePasswordVisibility);
-
-            // App navigation
-            document.getElementById('logoBtn').addEventListener('click', goToRoot);
-            document.getElementById('trashBtn').addEventListener('click', toggleTrash);
-            document.getElementById('createFolderBtn').addEventListener('click', createFolder);
-            document.getElementById('fileInput').addEventListener('change', handleFileUpload);
-
-            // FIX 3: Submenú de usuario
-            document.getElementById('userAvatar').addEventListener('click', (e) => {
-                e.stopPropagation();
-                document.getElementById('userSubmenu').classList.toggle('visible');
-            });
-            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-            // Cerrar submenú al hacer click fuera
-            document.addEventListener('click', () => {
-                document.getElementById('userSubmenu')?.classList.remove('visible');
-            });
-
-            // Preview modal
-            document.getElementById('closePreviewBtn').addEventListener('click', closePreview);
-            document.getElementById('downloadBtn').addEventListener('click', downloadCurrentImage);
-            document.getElementById('deleteImageBtn').addEventListener('click', deleteCurrentImage);
-
-            // FIX 5: Barra de selección
-            document.getElementById('cancelSelectionBtn').addEventListener('click', cancelSelection);
-            document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelectedItems);
-            document.getElementById('downloadSelectedBtn').addEventListener('click', downloadSelectedItems);
-            document.getElementById('moveSelectedBtn').addEventListener('click', moveSelectedItems);
-
-            // Iniciar app
-            init();
+// ─── CONTEXT MENU ──────────────────────────────────────────────────────
+function showContextMenu(ev, item) {
+    const menu = document.getElementById('contextMenu');
+    menu.style.left = `${Math.min(ev.clientX, window.innerWidth - 220)}px`;
+    menu.style.top  = `${Math.min(ev.clientY, window.innerHeight - 100)}px`;
+    menu.innerHTML  = `
+        <button class="context-menu-item restore" data-a="restore">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+            Restaurar
+        </button>
+        <button class="context-menu-item danger" data-a="perm">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Eliminar permanentemente
+        </button>`;
+    menu.classList.add('visible');
+    menu.querySelectorAll('[data-a]').forEach(b => {
+        b.addEventListener('click', async () => {
+            menu.classList.remove('visible');
+            if (b.dataset.a === 'restore') await restoreItem(item);
+            else await deletePermanently(item);
         });
-    </script>
+    });
+    setTimeout(() => document.addEventListener('click', () => menu.classList.remove('visible'), { once: true }), 10);
+}
+
+// ─── OPERACIONES ───────────────────────────────────────────────────────
+async function moveToTrash(item) {
+    try {
+        const { error } = await supabaseClient.from('gallery_items').update({ is_deleted: true }).eq('id', item.id);
+        if (error) throw error;
+    } catch (err) { showModal({ title: 'Error', message: err.message }); }
+}
+
+async function restoreItem(item) {
+    try {
+        const { error } = await supabaseClient.from('gallery_items').update({ is_deleted: false }).eq('id', item.id);
+        if (error) throw error;
+        showModal({ title: '✅ Restaurado', message: 'El elemento ha sido restaurado.' });
+    } catch (err) { showModal({ title: 'Error', message: err.message }); }
+}
+
+async function deletePermanently(item) {
+    showModal({
+        title: '⚠️ Confirmar', message: '¿Eliminar permanentemente? No se puede deshacer.', showCancel: true,
+        onConfirm: async () => {
+            try {
+                if (item.storage_path) await supabaseClient.storage.from('photos').remove([item.storage_path]);
+                const { error } = await supabaseClient.from('gallery_items').delete().eq('id', item.id);
+                if (error) throw error;
+                showModal({ title: '✅ Eliminado', message: 'Elemento eliminado permanentemente.' });
+            } catch (err) { showModal({ title: 'Error', message: err.message }); }
+        }
+    });
+}
+
+// ─── PREVIEW ───────────────────────────────────────────────────────────
+function showPreview(item) {
+    currentPreviewItem = item;
+    document.getElementById('previewImage').src          = item.imageUrl;
+    document.getElementById('previewTitle').textContent  = item.name;
+    document.getElementById('previewModal').classList.add('visible');
+}
+function closePreview() { document.getElementById('previewModal').classList.remove('visible'); currentPreviewItem = null; }
+
+async function downloadCurrentImage() {
+    if (!currentPreviewItem) return;
+    try {
+        const r = await fetch(currentPreviewItem.imageUrl);
+        const b = await r.blob();
+        const u = URL.createObjectURL(b);
+        const a = document.createElement('a');
+        a.href = u; a.download = currentPreviewItem.name;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u);
+    } catch { showModal({ title: 'Error', message: 'No se pudo descargar la imagen.' }); }
+}
+
+async function deleteCurrentImage() {
+    if (!currentPreviewItem) return;
+    closePreview();
+    await moveToTrash(currentPreviewItem);
+}
+
+// ─── SELECCIÓN ─────────────────────────────────────────────────────────
+function cancelSelection() {
+    isSelectionMode = false;
+    selectedItems.clear();
+    document.getElementById('selectionBar').classList.remove('visible');
+    renderContent();
+}
+
+function toggleItemSelection(itemId) {
+    if (selectedItems.has(itemId)) selectedItems.delete(itemId);
+    else selectedItems.add(itemId);
+    updateSelectionUI();
+}
+
+function updateSelectionUI() {
+    const count = selectedItems.size;
+    if (count > 0) document.getElementById('selectionBar').classList.add('visible');
+    else { document.getElementById('selectionBar').classList.remove('visible'); isSelectionMode = false; }
+    syncSelectionBar();
+    renderGrid();
+}
+
+// Mostrar/ocultar botones según vista normal vs papelera
+function syncSelectionBar() {
+    const isTrash = currentView === 'trash';
+    document.getElementById('renameSelectedBtn').classList.toggle('hidden', isTrash);
+    document.getElementById('downloadSelectedBtn').classList.toggle('hidden', isTrash);
+    document.getElementById('restoreSelectedBtn').classList.toggle('hidden', !isTrash);
+    // deleteSelectedBtn siempre visible
+}
+
+// FIX 3: Renombrar desde selección
+async function renameSelected() {
+    if (selectedItems.size === 0) return;
+    if (selectedItems.size > 1) { showModal({ title: 'Aviso', message: 'Selecciona un solo elemento para renombrar.' }); return; }
+    const id   = Array.from(selectedItems)[0];
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    cancelSelection(); // salir de selección antes de mostrar el modal
+    setTimeout(() => renameItem(id, item.name), 100);
+}
+
+async function downloadSelectedItems() {
+    if (!selectedItems.size) return;
+    const imgs = items.filter(i => selectedItems.has(i.id) && i.type === 'image');
+    if (!imgs.length) { showModal({ title: 'Aviso', message: 'Solo se pueden descargar imágenes.' }); return; }
+    for (const item of imgs) {
+        try {
+            const r = await fetch(item.imageUrl);
+            const b = await r.blob();
+            const u = URL.createObjectURL(b);
+            const a = document.createElement('a');
+            a.href = u; a.download = item.name;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u);
+            await new Promise(r => setTimeout(r, 100));
+        } catch (e) { console.error(e); }
+    }
+    showModal({ title: '✅ Éxito', message: `${imgs.length} imagen(es) descargada(s).` });
+}
+
+async function restoreSelectedItems() {
+    if (!selectedItems.size) return;
+    try {
+        for (const id of selectedItems)
+            await supabaseClient.from('gallery_items').update({ is_deleted: false }).eq('id', id);
+        showModal({ title: '✅ Restaurado', message: `${selectedItems.size} elemento(s) restaurado(s).` });
+        cancelSelection();
+    } catch (err) { showModal({ title: 'Error', message: err.message }); }
+}
+
+async function deleteSelectedItems() {
+    if (!selectedItems.size) return;
+    const isTrash = currentView === 'trash';
+    showModal({
+        title: '⚠️ Confirmar',
+        message: isTrash ? `¿Eliminar permanentemente ${selectedItems.size} elemento(s)?`
+                         : `¿Mover ${selectedItems.size} elemento(s) a la papelera?`,
+        showCancel: true,
+        onConfirm: async () => {
+            try {
+                for (const id of selectedItems) {
+                    if (isTrash) {
+                        const item = items.find(i => i.id === id);
+                        if (item?.storage_path) await supabaseClient.storage.from('photos').remove([item.storage_path]);
+                        await supabaseClient.from('gallery_items').delete().eq('id', id);
+                    } else {
+                        await supabaseClient.from('gallery_items').update({ is_deleted: true }).eq('id', id);
+                    }
+                }
+                showModal({ title: '✅ Listo', message: `${selectedItems.size} elemento(s) ${isTrash ? 'eliminado(s) permanentemente' : 'enviado(s) a la papelera'}.` });
+                cancelSelection();
+            } catch (err) { showModal({ title: 'Error', message: err.message }); }
+        }
+    });
+}
+
+// ─── EVENT LISTENERS ───────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    // Auth
+    document.getElementById('mainAuthBtn').addEventListener('click', handleAuth);
+    document.getElementById('toggleAuthLink').addEventListener('click', e => { e.preventDefault(); toggleAuthMode(); });
+    document.getElementById('resetPasswordLink').addEventListener('click', e => { e.preventDefault(); resetPassword(); });
+    document.getElementById('authPassword').addEventListener('keypress', e => { if (e.key === 'Enter') handleAuth(); });
+    document.getElementById('togglePasswordBtn').addEventListener('click', togglePasswordVisibility);
+
+    // Navegación
+    document.getElementById('logoBtn').addEventListener('click', goToRoot);
+    document.getElementById('trashBtn').addEventListener('click', toggleTrash);
+    document.getElementById('createFolderBtn').addEventListener('click', createFolder);
+    document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+
+    // Menú usuario
+    document.getElementById('userAvatar').addEventListener('click', e => {
+        e.stopPropagation();
+        document.getElementById('userSubmenu').classList.toggle('visible');
+    });
+    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+    document.addEventListener('click', () => document.getElementById('userSubmenu')?.classList.remove('visible'));
+
+    // Preview
+    document.getElementById('closePreviewBtn').addEventListener('click', closePreview);
+    document.getElementById('downloadBtn').addEventListener('click', downloadCurrentImage);
+    document.getElementById('deleteImageBtn').addEventListener('click', deleteCurrentImage);
+
+    // Barra de selección
+    document.getElementById('renameSelectedBtn').addEventListener('click', renameSelected);
+    document.getElementById('downloadSelectedBtn').addEventListener('click', downloadSelectedItems);
+    document.getElementById('restoreSelectedBtn').addEventListener('click', restoreSelectedItems);
+    document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelectedItems);
+
+    init();
+});
+</script>
 </body>
 </html>
