@@ -1296,8 +1296,9 @@ async function downloadCurrentImage() {
 
 async function deleteCurrentImage() {
     if (!currentPreviewItem) return;
+    const itemToDelete = currentPreviewItem;  // guardar referencia antes de cerrar
     closePreview();
-    await moveToTrash(currentPreviewItem);
+    await moveToTrash(itemToDelete);
 }
 
 // ─── SELECCIÓN ─────────────────────────────────────────────────────────
